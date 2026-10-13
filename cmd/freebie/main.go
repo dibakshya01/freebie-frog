@@ -20,6 +20,7 @@ import (
 	"github.com/dibakshya01/freebie-frog/internal/obs"
 	"github.com/dibakshya01/freebie-frog/internal/router"
 	"github.com/dibakshya01/freebie-frog/internal/secret"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 	"github.com/dibakshya01/freebie-frog/internal/server"
 	"github.com/dibakshya01/freebie-frog/internal/version"
 )
@@ -69,6 +70,14 @@ func cmdServe(args []string) error {
 		return err
 	}
 	logger := obs.NewLogger(cfg.Log.Level, cfg.Log.Format)
+
+	if !security.IsLoopbackBind(cfg.Server.Addr) {
+		if cfg.Server.AuthToken == "" {
+			return fmt.Errorf("refusing to bind non-loopback address %q without server.auth_token set "+
+				"(set it, or bind 127.0.0.1)", cfg.Server.Addr)
+		}
+		logger.Warn("binding a non-loopback address; ingress auth token is required and enabled", "addr", cfg.Server.Addr)
+	}
 
 	var deps server.Deps
 	if len(cfg.Providers) > 0 {

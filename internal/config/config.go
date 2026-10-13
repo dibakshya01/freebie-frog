@@ -28,6 +28,9 @@ type ServerConfig struct {
 	ReadTimeout     Duration `json:"read_timeout"`
 	WriteTimeout    Duration `json:"write_timeout"`
 	ShutdownTimeout Duration `json:"shutdown_timeout"`
+	// AuthToken, when set, is required on ingress requests (Authorization: Bearer or
+	// x-api-key). It is mandatory when binding a non-loopback address.
+	AuthToken string `json:"auth_token,omitempty"`
 }
 
 // LogConfig controls structured logging.
@@ -99,6 +102,9 @@ func applyEnv(cfg *Config) error {
 	}
 	if v, ok := os.LookupEnv(envPrefix + "LOG_FORMAT"); ok {
 		cfg.Log.Format = v
+	}
+	if v, ok := os.LookupEnv(envPrefix + "SERVER_AUTH_TOKEN"); ok {
+		cfg.Server.AuthToken = v
 	}
 	for _, e := range []struct {
 		key string

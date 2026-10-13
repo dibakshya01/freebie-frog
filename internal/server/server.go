@@ -52,7 +52,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/messages", s.handleMessages)
 	mux.HandleFunc("POST /v1/messages/count_tokens", s.handleCountTokens)
 	mux.HandleFunc("GET /v1/models", s.handleModels)
-	return s.withRequestLogging(mux)
+	return s.withRequestLogging(s.withAuth(mux))
 }
 
 // Run starts listening and blocks until ctx is cancelled, then shuts down

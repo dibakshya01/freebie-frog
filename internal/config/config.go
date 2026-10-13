@@ -14,11 +14,12 @@ import (
 // envPrefix namespaces all environment overrides.
 const envPrefix = "FREEBIE_"
 
-// Config is the top-level configuration. Provider, model-map, and fallback
-// settings are added in later milestones; M0 covers server + logging only.
+// Config is the top-level configuration.
 type Config struct {
-	Server ServerConfig `json:"server"`
-	Log    LogConfig    `json:"log"`
+	Server    ServerConfig        `json:"server"`
+	Log       LogConfig           `json:"log"`
+	Providers map[string]Provider `json:"providers,omitempty"`
+	Models    ModelRouting        `json:"models,omitempty"`
 }
 
 // ServerConfig controls the HTTP listener.
@@ -135,5 +136,6 @@ func (c Config) Validate() error {
 	if !validLogFormats[c.Log.Format] {
 		errs = append(errs, fmt.Errorf("log.format %q is invalid (want text|json)", c.Log.Format))
 	}
+	errs = append(errs, c.validateProviders()...)
 	return errors.Join(errs...)
 }

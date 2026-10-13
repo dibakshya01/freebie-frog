@@ -38,15 +38,19 @@ frequently, on every session.
 | **CommandCodeBridge** | Go reverse proxy, dual OpenAI+Anthropic endpoints | Go single binary | Less focus on agent-grade streaming/fallback/UX | (varies) |
 | **LiteLLM** | Broad LLM gateway/SDK | Huge provider coverage | Not Anthropic-ingress-first; Python; large surface | MIT |
 
-**The gap we fill:** there is no **single-binary, permissively-licensed (Apache-2.0),
-security-first, clean-room** Anthropic-compatible proxy that (a) gets the
-**streaming SSE translation provably right** (the detail most clones get subtly
-wrong), (b) ships **SSRF protection and OS-keychain secret handling as defaults**
-(absent or ad-hoc in the field), (c) does **multi-provider fallback** and
-**multi-agent launchers** out of the box, and (d) is **honest about free-tier
-limits and provider ToS**. FCC is the closest in breadth but is AGPL (copyleft)
-and Python; claude-code-router is MIT but Node and transformer-config-heavy. A Go
-single binary with security baked in and honest claims is an open niche.
+**The gap we fill:** the field has single-binary routers (claude-code-mux is Go with
+Anthropic-compatible failover) and breadth-focused ones (FCC, claude-code-router), but
+none combines **security-first defaults, clean-room Apache-2.0 licensing, correct
+streaming, and honest claims** in one place. Our wedge is (a) getting the **streaming
+SSE translation right** (the detail most clones get subtly wrong), snapshot-tested
+against spec fixtures; (b) shipping **SSRF protection and OS-keychain secret handling
+as defaults** (absent or ad-hoc in the field); (c) **multi-provider fallback** and
+**multi-agent launchers** out of the box; and (d) being **honest about free-tier limits
+and provider ToS**. FCC is the closest in breadth but is AGPL (copyleft) and Python;
+claude-code-router is MIT but Node and transformer-config-heavy; claude-code-mux is a
+single Go binary but its license/community are unverified and security is not its
+headline. Apache-2.0 is chosen not because it is "more permissive" than MIT (it isn't)
+but for its **explicit patent grant** — appropriate for a protocol-translation tool.
 
 ## 3. Technical landscape
 
@@ -147,9 +151,11 @@ free-tier, paid, or fully local — with correct streaming and automatic fallbac
 using your own keys.*
 
 **Wedge:** correctness + security + distribution. Get the streaming translation
-provably right, bake in SSRF/secret defaults the field lacks, ship as one Go
-binary (`go install`/download, no runtime), and be honest about limits — against a
-field that is either copyleft+Python (FCC) or Node+config-heavy (claude-code-router).
+right (snapshot-verified against spec fixtures and an in-process mock), bake in
+SSRF/secret defaults the field lacks, ship as one Go binary (`go install`/download,
+no runtime), and be honest about limits — against a field that is either
+copyleft+Python (FCC), Node+config-heavy (claude-code-router), or single-binary but
+not security-first (claude-code-mux).
 
 **Principles (decide trade-offs):**
 1. **Protocol correctness first.** The streaming SSE translation is the product;

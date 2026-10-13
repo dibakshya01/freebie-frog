@@ -18,6 +18,8 @@ import (
 
 	"github.com/dibakshya01/freebie-frog/internal/config"
 	"github.com/dibakshya01/freebie-frog/internal/obs"
+	"github.com/dibakshya01/freebie-frog/internal/router"
+	"github.com/dibakshya01/freebie-frog/internal/secret"
 	"github.com/dibakshya01/freebie-frog/internal/server"
 	"github.com/dibakshya01/freebie-frog/internal/version"
 )
@@ -68,10 +70,21 @@ func cmdServe(args []string) error {
 	}
 	logger := obs.NewLogger(cfg.Log.Level, cfg.Log.Format)
 
+	var deps server.Deps
+	if len(cfg.Providers) > 0 {
+		reg, err := router.Build(&cfg, secret.New())
+		if err != nil {
+			return err
+		}
+		deps = server.Deps{Registry: reg, Dispatcher: router.NewDispatcher(reg, logger)}
+	} else {
+		logger.Warn("no providers configured; the Messages API will return 503 until you add one (see README)")
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	return server.New(cfg.Server, logger).Run(ctx)
+	return server.New(cfg.Server, logger, deps).Run(ctx)
 }
 
 func cmdConfig(args []string) error {

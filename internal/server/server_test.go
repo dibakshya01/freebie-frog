@@ -12,7 +12,7 @@ import (
 )
 
 func testServer() *server.Server {
-	return server.New(config.Default().Server, obs.NewLogger("error", "text"))
+	return server.New(config.Default().Server, obs.NewLogger("error", "text"), server.Deps{})
 }
 
 func TestHealthz(t *testing.T) {

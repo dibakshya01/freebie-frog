@@ -13,19 +13,29 @@ import (
 	"time"
 
 	"github.com/dibakshya01/freebie-frog/internal/config"
+	"github.com/dibakshya01/freebie-frog/internal/router"
 	"github.com/dibakshya01/freebie-frog/internal/version"
 )
+
+// Deps are the runtime dependencies the ingress handlers need. They may be zero
+// (e.g. in the M0 health-only configuration or tests), in which case the Messages
+// API endpoints report that no providers are configured.
+type Deps struct {
+	Dispatcher *router.Dispatcher
+	Registry   *router.Registry
+}
 
 // Server wraps an *http.Server with freebie-frog's routes and middleware.
 type Server struct {
 	cfg  config.ServerConfig
 	log  *slog.Logger
+	deps Deps
 	http *http.Server
 }
 
 // New constructs a Server ready to Run.
-func New(cfg config.ServerConfig, log *slog.Logger) *Server {
-	s := &Server{cfg: cfg, log: log}
+func New(cfg config.ServerConfig, log *slog.Logger, deps Deps) *Server {
+	s := &Server{cfg: cfg, log: log, deps: deps}
 	s.http = &http.Server{
 		Addr:         cfg.Addr,
 		Handler:      s.Handler(),
@@ -39,6 +49,9 @@ func New(cfg config.ServerConfig, log *slog.Logger) *Server {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealth)
+	mux.HandleFunc("POST /v1/messages", s.handleMessages)
+	mux.HandleFunc("POST /v1/messages/count_tokens", s.handleCountTokens)
+	mux.HandleFunc("GET /v1/models", s.handleModels)
 	return s.withRequestLogging(mux)
 }
 

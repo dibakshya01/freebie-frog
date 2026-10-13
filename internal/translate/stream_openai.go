@@ -22,7 +22,8 @@ type sink = func(anthropic.StreamEvent) error
 // content_block_start carries the real id/name even when the provider sends arguments
 // before (or without) the name on the first chunk (FR-8 defensive accumulation).
 type pendingTool struct {
-	key       int // OpenAI tool_calls index, or a synthetic negative key when absent
+	key       int  // OpenAI tool_calls index, or a synthetic key when absent
+	synthetic bool // true when key is a synthetic id (index was absent)
 	anthIndex int
 	id        string
 	name      string
@@ -158,26 +159,29 @@ func (t *OpenAIStreamTranslator) processLine(line []byte, out sink) (bool, error
 	return false, nil
 }
 
-func (t *OpenAIStreamTranslator) toolKeyFor(tc openai.ToolCall) int {
+// toolRef identifies the tool-call slot: an explicit OpenAI index (synthetic=false),
+// or a synthetic key when the index is absent (synthetic=true). The synthetic flag
+// keeps synthetic keys from colliding with explicit (even negative) indices.
+func (t *OpenAIStreamTranslator) toolRef(tc openai.ToolCall) (int, bool) {
 	if tc.Index != nil {
-		return *tc.Index
+		return *tc.Index, false
 	}
 	// No index: a tool call carrying an id (or when none is active) starts a new slot;
 	// otherwise it continues the current index-less tool.
-	if t.tool != nil && tc.ID == "" {
-		return t.tool.key
+	if t.tool != nil && t.tool.synthetic && tc.ID == "" {
+		return t.tool.key, true
 	}
-	t.synthKey--
-	return t.synthKey
+	t.synthKey++
+	return t.synthKey, true
 }
 
 func (t *OpenAIStreamTranslator) handleToolCall(out sink, tc openai.ToolCall) error {
-	key := t.toolKeyFor(tc)
-	if t.tool == nil || t.tool.key != key {
+	key, synthetic := t.toolRef(tc)
+	if t.tool == nil || t.tool.key != key || t.tool.synthetic != synthetic {
 		if err := t.finishTool(out); err != nil {
 			return err
 		}
-		t.tool = &pendingTool{key: key}
+		t.tool = &pendingTool{key: key, synthetic: synthetic}
 	}
 	if tc.ID != "" {
 		t.tool.id = tc.ID
@@ -218,6 +222,13 @@ func (t *OpenAIStreamTranslator) openTool(out sink) error {
 	t.nextIndex++
 	t.tool.open = true
 	t.sawTool = true
+	// Guarantee a schema-valid block even if a broken upstream never sent name/id.
+	if t.tool.id == "" {
+		t.tool.id = newToolUseID()
+	}
+	if t.tool.name == "" {
+		t.tool.name = "unknown"
+	}
 	if err := emit(out, "content_block_start", anthropic.ContentBlockStart{
 		Type: "content_block_start", Index: t.tool.anthIndex,
 		ContentBlock: anthropic.ContentBlock{Type: "tool_use", ID: t.tool.id, Name: t.tool.name, Input: json.RawMessage("{}")},

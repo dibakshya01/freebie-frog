@@ -36,7 +36,7 @@ func hostWithoutPort(host string) string {
 // loopback host pass through.
 func AdminGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !loopbackHostnames[hostWithoutPort(r.Host)] {
+		if !loopbackHostnames[strings.ToLower(hostWithoutPort(r.Host))] {
 			http.Error(w, "forbidden: admin UI is loopback-only", http.StatusForbidden)
 			return
 		}

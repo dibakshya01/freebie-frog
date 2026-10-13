@@ -3,6 +3,7 @@ package security
 import (
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // sensitiveHeaders are never logged by value.
@@ -24,7 +25,7 @@ func IsSensitiveHeader(name string) bool {
 // keyPatterns matches common provider key / bearer shapes so they can be scrubbed
 // from bodies even when their exact value isn't known to the redactor.
 var keyPatterns = regexp.MustCompile(
-	`(?i)(sk-[a-z0-9_-]{6,}|gsk_[a-z0-9]{6,}|nvapi-[a-z0-9_-]{6,}|csk-[a-z0-9]{6,}|sk-or-[a-z0-9_-]{6,}|AIza[0-9A-Za-z_-]{10,}|Bearer\s+[a-z0-9._-]{6,})`,
+	`(?i)(sk-[a-z0-9_-]{6,}|gsk_[a-z0-9]{6,}|nvapi-[a-z0-9_-]{6,}|csk-[a-z0-9]{6,}|xai-[a-z0-9]{6,}|fw_[a-z0-9]{6,}|pplx-[a-z0-9]{6,}|AIza[0-9A-Za-z_-]{10,}|Bearer\s+[a-z0-9._-]{6,}|eyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{6,}\.[a-z0-9_-]{6,})`,
 )
 
 // Redactor scrubs known secret values and key-shaped patterns from strings.
@@ -57,11 +58,28 @@ func NeutralizeNewlines(s string) string {
 	return strings.NewReplacer("\r", " ", "\n", " ").Replace(s)
 }
 
-// defaultRedactor scrubs key-shaped patterns (no known values).
-var defaultRedactor = NewRedactor()
+var (
+	redactorMu      sync.RWMutex
+	defaultRedactor = NewRedactor()
+	knownSecrets    []string
+)
 
-// Scrub removes key-shaped substrings from s. Use it on any upstream-derived text
-// (error bodies, messages) before it is logged or returned to a client.
+// RegisterSecrets adds known secret values (e.g. the configured provider keys) to the
+// global scrubber so Scrub removes them verbatim — not only by shape. This catches
+// provider keys whose format the pattern set doesn't know (Azure, Mistral, Cohere,
+// raw JWTs, …). Safe to call repeatedly, e.g. once per provider at startup.
+func RegisterSecrets(secrets ...string) {
+	redactorMu.Lock()
+	defer redactorMu.Unlock()
+	knownSecrets = append(knownSecrets, secrets...)
+	defaultRedactor = NewRedactor(knownSecrets...)
+}
+
+// Scrub removes known secret values and key-shaped substrings from s. Use it on any
+// upstream-derived text (error bodies, messages) before it is logged or returned.
 func Scrub(s string) string {
-	return defaultRedactor.Redact(s)
+	redactorMu.RLock()
+	r := defaultRedactor
+	redactorMu.RUnlock()
+	return r.Redact(s)
 }

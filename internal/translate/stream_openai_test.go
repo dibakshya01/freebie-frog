@@ -242,6 +242,44 @@ func TestStream_ToolNameAfterArgs(t *testing.T) {
 	}
 }
 
+func TestStream_SyntheticKeyDoesNotCollideWithNegativeIndex(t *testing.T) {
+	// An index-less tool (synthetic key) followed by an explicit index:-1 tool must
+	// remain two distinct blocks (N2).
+	events := runStream(t, []string{
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"id":"a","type":"function","function":{"name":"f_synth","arguments":"{}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"index":-1,"id":"b","type":"function","function":{"name":"f_neg","arguments":"{}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`,
+	}, true)
+	var names []string
+	for _, e := range events {
+		if p, ok := e.Payload.(anthropic.ContentBlockStart); ok && p.ContentBlock.Type == "tool_use" {
+			names = append(names, p.ContentBlock.Name)
+		}
+	}
+	if len(names) != 2 || names[0] != "f_synth" || names[1] != "f_neg" {
+		t.Fatalf("expected two distinct tool blocks [f_synth f_neg], got %v", names)
+	}
+}
+
+func TestStream_ToolNameNeverArrivesGetsPlaceholder(t *testing.T) {
+	// A broken upstream that sends only args (no name/id) must still produce a
+	// schema-valid tool_use with a non-empty name and id (N3).
+	events := runStream(t, []string{
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"a\":1}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`,
+	}, true)
+	var start *anthropic.ContentBlockStart
+	for _, e := range events {
+		if p, ok := e.Payload.(anthropic.ContentBlockStart); ok && p.ContentBlock.Type == "tool_use" {
+			cp := p
+			start = &cp
+		}
+	}
+	if start == nil || start.ContentBlock.Name == "" || start.ContentBlock.ID == "" {
+		t.Fatalf("nameless tool must get a placeholder name and id, got %+v", start)
+	}
+}
+
 func TestStream_ParallelToolsWithoutIndex(t *testing.T) {
 	// Two index-less tool calls (each with its own id) must not be merged.
 	events := runStream(t, []string{

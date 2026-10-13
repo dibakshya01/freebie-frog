@@ -40,6 +40,10 @@ func Build(cfg *config.Config, store *secret.Store) (*Registry, error) {
 			}
 			key = k
 		}
+		// Register the resolved key so logs/error text scrub it by value, not just shape.
+		if key != "" {
+			security.RegisterSecrets(key)
+		}
 		client, err := buildClient(pc)
 		if err != nil {
 			return nil, fmt.Errorf("provider %q: %w", name, err)

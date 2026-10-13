@@ -22,6 +22,17 @@ func TestRedactor(t *testing.T) {
 	}
 }
 
+func TestRegisterSecretsScrubsOpaqueKeys(t *testing.T) {
+	// An opaque, shapeless key (e.g. Azure 32-hex) isn't caught by patterns alone;
+	// after registration, Scrub removes it by value.
+	opaque := "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+	RegisterSecrets(opaque)
+	got := Scrub("upstream said: invalid key " + opaque + " rejected")
+	if strings.Contains(got, opaque) {
+		t.Fatalf("registered opaque secret not scrubbed: %s", got)
+	}
+}
+
 func TestIsSensitiveHeader(t *testing.T) {
 	for _, h := range []string{"Authorization", "x-api-key", "X-API-KEY", "x-goog-api-key", "Cookie"} {
 		if !IsSensitiveHeader(h) {

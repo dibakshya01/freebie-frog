@@ -72,4 +72,18 @@ A running, one-line-per-step record of the freebie-frog build.
   (DNS-rebinding defense) + CSRF guard; verified live (state leaks no keys, rebinding
   Host -> 403). Spec FR-20 + CAPABILITIES updated to read-only scope (honesty).
 - Phase 3 DONE. Full `go test -race ./...` green across 11 packages; gofmt + vet clean.
-- Website (Phase 4) built in parallel by a subagent (docs/).
+- Website (Phase 4) built in parallel by a subagent (docs/); corrected stale
+  "scaffold/roadmap" copy to reflect the shipped full suite.
+
+## Phase 5 — Adversarial hardening
+- Round 1 (fresh devil's-advocate subagent, read-only, isolated probes): found 1
+  critical + 8 moderate + 4 minor, all legitimate. Fixed:
+  - CRITICAL: SSE Flusher silently dropped by the logging wrapper -> added
+    statusRecorder Flush()+Unwrap() (streaming now delivered per event).
+  - Mid-stream errors now terminate the SSE (error + content_block_stop + message_stop).
+  - 64 MiB stream read caps; non-streaming 120s timeout.
+  - Defensive tool-call accumulation (name/id after args; index-less parallel tools).
+  - Loopback default bind; allow_local scoped to the configured host; NAT64/reserved
+    SSRF ranges; secret scrubbing wired into upstream error text + logs; CR/LF
+    neutralized in logs. Docs/spec reconciled to actual behavior (honesty).
+  - Added regression/attack tests for each. Full suite green with -race.

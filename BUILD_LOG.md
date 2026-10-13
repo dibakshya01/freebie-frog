@@ -87,3 +87,10 @@ A running, one-line-per-step record of the freebie-frog build.
     SSRF ranges; secret scrubbing wired into upstream error text + logs; CR/LF
     neutralized in logs. Docs/spec reconciled to actual behavior (honesty).
   - Added regression/attack tests for each. Full suite green with -race.
+- Round 2 (fresh subagent, read-only, isolated probes): verified ALL 7 round-1 fixes
+  hold under dynamic attack; no criticals/regressions; -race clean; no leaks/panics.
+  Fixed 2 moderate + 2 minor: wired a live known-value redactor (RegisterSecrets from
+  router.Build; broadened patterns) so odd-shaped keys scrub by value; namespaced
+  synthetic tool-call keys (no collision with negative indices); placeholder name/id
+  for nameless tools; case-insensitive admin Host check. Tests added; green with -race.
+- Round 3 (final): verifying round-2 fixes + last sweep (claims/licensing/panics).

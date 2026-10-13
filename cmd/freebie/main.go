@@ -14,9 +14,11 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sort"
 	"syscall"
 
 	"github.com/dibakshya01/freebie-frog/internal/config"
+	"github.com/dibakshya01/freebie-frog/internal/launch"
 	"github.com/dibakshya01/freebie-frog/internal/obs"
 	"github.com/dibakshya01/freebie-frog/internal/router"
 	"github.com/dibakshya01/freebie-frog/internal/secret"
@@ -42,6 +44,10 @@ func run(args []string) error {
 	switch cmd {
 	case "serve":
 		return cmdServe(rest)
+	case "run":
+		return cmdRun(rest)
+	case "providers":
+		return cmdProviders(rest)
 	case "config":
 		return cmdConfig(rest)
 	case "doctor":
@@ -94,6 +100,49 @@ func cmdServe(args []string) error {
 	defer stop()
 
 	return server.New(cfg.Server, logger, deps).Run(ctx)
+}
+
+func cmdRun(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("usage: freebie run <agent> [args...]  (e.g. freebie run claude)")
+	}
+	cfg, err := config.Load(resolveConfigPath(""))
+	if err != nil {
+		return err
+	}
+	baseURL := launch.HTTPBaseURL(cfg.Server.Addr)
+	agent := args[0]
+	return launch.Run(baseURL, cfg.Server.AuthToken, launch.Resolve(agent), args[1:])
+}
+
+func cmdProviders(args []string) error {
+	fs := flag.NewFlagSet("providers", flag.ContinueOnError)
+	cfgPath := fs.String("config", "", "path to JSON config file")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	cfg, err := config.Load(resolveConfigPath(*cfgPath))
+	if err != nil {
+		return err
+	}
+	if len(cfg.Providers) == 0 {
+		fmt.Println("no providers configured (see config.example.json)")
+		return nil
+	}
+	names := make([]string, 0, len(cfg.Providers))
+	for n := range cfg.Providers {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	for _, n := range names {
+		p := cfg.Providers[n]
+		local := ""
+		if p.AllowLocal {
+			local = "  [allow_local]"
+		}
+		fmt.Printf("%-12s type=%-9s models=%-2d base_url=%s%s\n", n, p.Type, len(p.Models), p.BaseURL, local)
+	}
+	return nil
 }
 
 func cmdConfig(args []string) error {
@@ -162,11 +211,13 @@ Usage:
   freebie <command> [flags]
 
 Commands:
-  serve     Start the proxy server
-  config    Print the resolved configuration and exit
-  doctor    Run environment/config diagnostics
-  version   Print the version
-  help      Show this help
+  serve        Start the proxy server
+  run <agent>  Launch an agent (e.g. claude) wired to the proxy
+  providers    List configured providers and advertised model counts
+  config       Print the resolved configuration and exit
+  doctor       Run environment/config diagnostics
+  version      Print the version
+  help         Show this help
 
 Flags (serve/config/doctor):
   --config <path>   Path to a JSON config file (defaults to ./config.json if present)

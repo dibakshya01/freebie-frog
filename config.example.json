@@ -1,0 +1,12 @@
+{
+  "server": {
+    "addr": ":4000",
+    "read_timeout": "30s",
+    "write_timeout": "0s",
+    "shutdown_timeout": "15s"
+  },
+  "log": {
+    "level": "info",
+    "format": "text"
+  }
+}

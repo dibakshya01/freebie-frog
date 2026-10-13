@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>freebie-frog</title>
+<meta name="description" content="A single-binary, Apache-2.0, security-first proxy that lets Anthropic-API coding agents run on free-tier, local, or paid model providers — with correct streaming and automatic fallback, using your own keys.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="freebie-frog — point your coding agent at any model">
+<meta property="og:description" content="A single-binary, security-first proxy that speaks the Anthropic Messages API and routes it to free-tier, local, or paid providers. BYO-key, correct streaming, automatic fallback.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<script>(function(){try{var t=localStorage.getItem("ff-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="index.html" aria-label="freebie-frog home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+        <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+      </svg>
+      <span><b>freebie</b><span class="frog">-frog</span></span>
+    </a>
+    <nav id="nav-links" class="nav__links" aria-label="Primary">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn-ghost btn-sm btn-ghost-ic" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Switch theme">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+      </button>
+      <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero__glow" aria-hidden="true"></div>
+  <div class="hero__grid" aria-hidden="true"></div>
+  <div class="wrap hero__inner">
+    <div>
+      <span class="hero__kicker"><span class="dot"></span>Independent open-source proxy · Apache-2.0</span>
+      <h1>Point your coding agent at <span class="hl">any model.</span></h1>
+      <p class="hero__lede">freebie-frog is a single-binary, security-first proxy that speaks the Anthropic Messages API and routes it to free-tier, local, or paid providers — with correct streaming and automatic fallback, using your own keys.</p>
+
+      <div class="cmd">
+        <span class="cmd__prompt" aria-hidden="true">$</span>
+        <code id="install-cmd">go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest</code>
+        <button class="copy" type="button" data-copy="#install-cmd" aria-label="Copy to clipboard">
+          <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>
+      </div>
+
+      <div class="hero__cta">
+        <a class="btn btn-ink" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+          View on GitHub
+        </a>
+        <a class="btn btn-ink-ghost" href="docs.html">Read the docs</a>
+      </div>
+
+      <div class="hero__chips chips">
+        <span class="chip chip--ink"><span class="dot"></span>Apache-2.0</span>
+        <span class="chip chip--ink"><span class="dot"></span>single binary</span>
+        <span class="chip chip--ink"><span class="dot"></span>SSRF-guarded</span>
+        <span class="chip chip--ink"><span class="dot"></span>streaming-correct</span>
+        <span class="chip chip--ink"><span class="dot"></span>BYO-key</span>
+      </div>
+    </div>
+
+    <!-- HERO VISUAL: the hop -->
+    <div class="hero__vis">
+      <div class="pipe">
+        <div class="pipe__label">
+          <span>request route</span>
+          <span class="pipe__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+        <div class="hop">
+          <svg viewBox="0 0 360 384" role="img" aria-label="A request travels from the coding agent, through freebie-frog which translates and routes it, to the chosen provider.">
+            <!-- connector lines -->
+            <line x1="180" y1="86" x2="180" y2="150" class="d-line" stroke-width="2"/>
+            <line x1="180" y1="234" x2="180" y2="298" class="d-line" stroke-width="2"/>
+            <!-- boxes -->
+            <g>
+              <rect x="54" y="20" width="252" height="66" rx="14" class="d-box-ink"/>
+              <text x="180" y="48" text-anchor="middle" class="d-title" font-size="17" fill="#e9efe9">Coding agent</text>
+              <text x="180" y="68" text-anchor="middle" font-size="11.5" fill="#94a19a" font-family="'JetBrains Mono', monospace">Claude Code · Codex · Aider</text>
+            </g>
+            <g>
+              <rect x="36" y="150" width="288" height="84" rx="16" fill="#111a14" stroke="#35e089" stroke-width="1.6"/>
+              <circle cx="66" cy="192" r="15" fill="#11271b"/>
+              <path d="M57 200 C 61 182, 71 182, 75 200" fill="none" stroke="#35e089" stroke-width="2.4" stroke-linecap="round"/>
+              <circle cx="63" cy="185" r="2.1" fill="#35e089"/><circle cx="69" cy="185" r="2.1" fill="#35e089"/>
+              <text x="92" y="186" class="d-title" font-size="16" fill="#e9efe9">freebie-frog</text>
+              <text x="92" y="206" font-size="11.5" fill="#c3cdc3" font-family="'JetBrains Mono', monospace">translate · route · fall back</text>
+            </g>
+            <g>
+              <rect x="54" y="298" width="252" height="66" rx="14" fill="#10242c" stroke="#57bada" stroke-width="1.6"/>
+              <text x="180" y="326" text-anchor="middle" class="d-title" font-size="17" fill="#e9efe9">Provider</text>
+              <text x="180" y="346" text-anchor="middle" font-size="11.5" fill="#82cfe8" font-family="'JetBrains Mono', monospace">free · local · paid</text>
+            </g>
+            <!-- travelling packets (transform-animated, gated) -->
+            <circle class="packet" cx="180" cy="90" r="5" fill="#35e089" style="--travel:56px"/>
+            <circle class="packet p2" cx="180" cy="238" r="5" fill="#57bada" style="--travel:56px"/>
+            <!-- wire labels (drawn on top) -->
+            <g>
+              <rect x="110" y="106" width="140" height="24" rx="12" fill="#17221a" stroke="#243029"/>
+              <text x="180" y="122" text-anchor="middle" font-size="11" fill="#94a19a" font-family="'JetBrains Mono', monospace">Anthropic Messages</text>
+            </g>
+            <g>
+              <rect x="104" y="254" width="152" height="24" rx="12" fill="#17221a" stroke="#243029"/>
+              <text x="180" y="270" text-anchor="middle" font-size="11" fill="#94a19a" font-family="'JetBrains Mono', monospace">OpenAI-compatible · Gemini</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROVIDERS BAND -->
+<section class="section section--tight">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-bottom:24px">
+      <p class="eyebrow">One adapter, the whole field</p>
+      <h2>Talk to the OpenAI-compatible world — plus native Gemini.</h2>
+    </div>
+    <div class="provs reveal" data-delay="1">
+      <span class="prov"><b>NVIDIA</b> NIM</span>
+      <span class="prov"><b>Groq</b></span>
+      <span class="prov"><b>DeepSeek</b></span>
+      <span class="prov"><b>OpenRouter</b></span>
+      <span class="prov"><b>Together</b></span>
+      <span class="prov"><b>Mistral</b></span>
+      <span class="prov"><b>Ollama</b></span>
+      <span class="prov"><b>llama.cpp</b></span>
+      <span class="prov"><b>vLLM</b></span>
+      <span class="prov"><b>LM Studio</b></span>
+      <span class="prov"><b>Gemini</b> native</span>
+      <span class="prov"><b>Anthropic</b> passthrough</span>
+    </div>
+    <p class="muted reveal" data-delay="2" style="margin-top:16px;font-size:0.9rem;max-width:70ch">Essentially every target speaks OpenAI Chat Completions, so one generic adapter plus a per-provider config row covers the field. Provider names are trademarks of their owners; support is best-effort and parity varies by provider and model.</p>
+  </div>
+</section>
+
+<!-- WHY IT EXISTS -->
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">Why it exists</p>
+      <h2>Agents are hard-wired to one API. The models you want speak another.</h2>
+      <p class="lede">Coding-agent CLIs speak Anthropic's <code>/v1/messages</code>; most of the model world speaks OpenAI's <code>/v1/chat/completions</code>. Three problems follow.</p>
+    </div>
+    <div class="grid grid-3">
+      <article class="card reveal" data-delay="1">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+        <h3>Lock-in</h3>
+        <p>Without a translator you can't use the agent with those models at all. One wire protocol locks you to one slice of the ecosystem.</p>
+      </article>
+      <article class="card reveal" data-delay="2">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.2c0-1.1 1.1-1.7 2.5-1.7s2.5.6 2.5 1.8c0 2.4-5 1.3-5 3.6 0 1.2 1.1 1.8 2.5 1.8s2.5-.6 2.5-1.7"/></svg></div>
+        <h3>Cost &amp; access</h3>
+        <p>Running an agent loop against a frontier API adds up. Free tiers and local models let students, hobbyists, and cost-sensitive teams keep working.</p>
+      </article>
+      <article class="card reveal" data-delay="3">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
+        <h3>Reliability</h3>
+        <p>Free tiers rate-limit hard, so no single provider is dependable. An ordered fallback chain tries the next target when one is throttled.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>A request hops across the gap, correctly.</h2>
+      <p class="lede">The same journey every message takes — in and out, including the streaming event sequence.</p>
+    </div>
+
+    <div class="flow reveal" data-delay="1">
+      <div class="flow__node">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg></div>
+        <p class="n">Agent</p><h4>Sends</h4>
+        <p>Anthropic Messages API over HTTP + SSE.</p>
+      </div>
+      <div class="flow__arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow__node">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-7 4 14 2-7h4"/></svg></div>
+        <p class="n">Ingress</p><h4>Accepts</h4>
+        <p><code>/v1/messages</code>, validated locally.</p>
+      </div>
+      <div class="flow__arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow__node">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8 6h7a3 3 0 0 1 3 3v6M6 8v7a3 3 0 0 0 3 3h7"/></svg></div>
+        <p class="n">Route + translate</p><h4>Maps</h4>
+        <p>Model/tier → targets; Anthropic ↔ provider.</p>
+      </div>
+      <div class="flow__arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow__node flow__node--prov">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></div>
+        <p class="n">Provider</p><h4>Answers</h4>
+        <p>Free, local, or paid — your account, your key.</p>
+      </div>
+    </div>
+
+    <div class="note reveal" data-delay="2" style="margin-top:28px">
+      <span class="note__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+      <p>The response takes the journey back the other way. The hard part is reconstructing the Anthropic SSE sequence (<code>message_start → content_block_delta → message_stop</code>) from provider chunks — including partial tool-call arguments. That streaming translation is the product; see the <a href="architecture.html">architecture</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">Security-first, by default</p>
+      <h2>It holds your keys and forwards your prompts. The defaults assume that.</h2>
+    </div>
+    <div class="grid grid-3">
+      <article class="card reveal" data-delay="1">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v5c0 4.5 3.2 8.4 8 10 4.8-1.6 8-5.5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>SSRF guard</h3>
+        <p>Every outbound call validates each resolved IP at dial time — defeating DNS rebinding — and blocks loopback, RFC1918, link-local, and cloud metadata (IPv4, IPv6, and IPv4-mapped). Redirects are disabled.</p>
+      </article>
+      <article class="card reveal" data-delay="2">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="16" r="1.3"/></svg></div>
+        <h3>Secrets, handled</h3>
+        <p>OS keychain, then an AES-256-GCM encrypted file, then <code>0600</code> plaintext with a warning. The config stores a reference, not the value. Auth headers and secret patterns are scrubbed from every log.</p>
+      </article>
+      <article class="card reveal" data-delay="3">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7a5 5 0 0 0 0 10M3.5 12h17"/></svg></div>
+        <h3>Loopback by default</h3>
+        <p>The server binds <code>127.0.0.1</code>. A non-loopback bind is explicit, warned, and requires an ingress token — so the proxy is never exposed to a network unauthenticated.</p>
+      </article>
+    </div>
+    <p class="muted reveal" data-delay="3" style="margin-top:20px;font-size:0.92rem">Mapped to OWASP Top 10 for LLM Applications (2026) and API Security Top 10. It's a local, single-user tool — not a multi-tenant security boundary. Full detail in the <a href="architecture.html">architecture &amp; threat model</a>.</p>
+  </div>
+</section>
+
+<!-- HONEST FREE -->
+<section class="section">
+  <div class="wrap">
+    <div class="card card--pad-lg reveal" style="display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start">
+      <div class="card__ic" style="margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/><circle cx="12" cy="12" r="3.2"/></svg></div>
+      <div>
+        <h3 style="font-size:1.3rem">What "free" honestly means</h3>
+        <p class="measure" style="margin-top:10px;color:var(--text-2)">A realistic aggregate across providers is <strong>on the order of tens to hundreds of millions of free tokens per month</strong>, bound by per-minute and per-day throttles and per-provider (often per-organization) limits. Availability is the providers' and changes without notice. That is not "unlimited" and not "1B+".</p>
+        <p class="measure" style="margin-top:12px;color:var(--muted);font-size:0.95rem">freebie-frog uses your <strong>own accounts and keys</strong>, single-account. It does not rotate accounts or pool quota across them — that would violate providers' terms. <a href="eli5.html">The plain-English version →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta reveal">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <p class="eyebrow" style="color:var(--ink-accent)">Get started</p>
+      <h2 style="margin-top:10px">Install once. Point your agent. Pick a model.</h2>
+      <p>One Go command builds a single static binary — no runtime to install.</p>
+      <div class="cmd" style="margin-inline:auto">
+        <span class="cmd__prompt" aria-hidden="true">$</span>
+        <code id="install-cmd-2">go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest</code>
+        <button class="copy" type="button" data-copy="#install-cmd-2" aria-label="Copy to clipboard">
+          <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>
+      </div>
+      <div class="hero__cta">
+        <a class="btn btn-ink" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-ink-ghost" href="docs.html">Quick start</a>
+      </div>
+      <p style="margin-top:22px"><span class="status"><span class="pulse"></span>Active development — the M0 scaffold ships; the translating core is in progress.</span></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <a class="brand" href="index.html" aria-label="freebie-frog home">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+          <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+        </svg>
+        <span><b>freebie</b><span class="frog">-frog</span></span>
+      </a>
+      <p>A single-binary, security-first proxy that lets Anthropic-API coding agents run on the model provider you choose — using your own keys.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Project</h4>
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer__col">
+      <h4>Source</h4>
+      <a href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">Repository</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/issues" target="_blank" rel="noopener">Issues</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0 license</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/security/advisories" target="_blank" rel="noopener">Security advisories</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="footer__bar">
+      <p class="footer__disclaimer"><strong>Independent project — not affiliated with or endorsed by Anthropic, OpenAI, or Google.</strong> "Claude Code", "Anthropic", "OpenAI", "Gemini", and other names are trademarks of their respective owners.</p>
+      <p>Apache-2.0 · BYO-key · © 2026 freebie-frog</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>freebie-frog Architecture</title>
+<meta name="description" content="How freebie-frog works: the component pipeline, the streaming SSE translation, and where the SSRF guard and secret store sit — with the design principles behind them.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="freebie-frog architecture">
+<meta property="og:description" content="Component pipeline, streaming SSE translation, and the SSRF guard and secret store — the real diagrams.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<script>(function(){try{var t=localStorage.getItem("ff-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="index.html" aria-label="freebie-frog home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+        <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+      </svg>
+      <span><b>freebie</b><span class="frog">-frog</span></span>
+    </a>
+    <nav id="nav-links" class="nav__links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html" aria-current="page">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn-ghost btn-sm btn-ghost-ic" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Switch theme">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+      </button>
+      <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="phead">
+  <div class="wrap">
+    <div class="phead__inner">
+      <p class="eyebrow">Architecture</p>
+      <h1>Three diagrams, one honest machine.</h1>
+      <p class="lede">The component pipeline, the streaming translation that is the hard part, and where the security guards actually sit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DIAGRAM A: COMPONENTS -->
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">A — Component pipeline</p>
+      <h2>From agent to provider, and back.</h2>
+      <p class="lede">A request enters in the Anthropic Messages API, is routed and translated inside freebie-frog, and leaves through a single SSRF-guarded HTTP client to the provider you chose.</p>
+    </div>
+
+    <div class="diagram reveal" data-delay="1">
+      <svg viewBox="0 0 1110 300" role="img" aria-label="Component diagram: a coding agent sends an Anthropic Messages API request to freebie-frog, which runs ingress, router with fallback, translation, and a provider adapter; all outbound traffic passes through an SSRF-guarded HTTP client to the provider API. Config and secrets, observability, and the admin UI sit underneath.">
+        <defs>
+          <marker id="aA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah"/></marker>
+          <marker id="aAg" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah-g"/></marker>
+          <marker id="aA2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah-2"/></marker>
+        </defs>
+
+        <!-- agent -->
+        <rect x="20" y="52" width="150" height="84" rx="12" class="d-box-2"/>
+        <text x="95" y="90" text-anchor="middle" class="d-title" font-size="15">Coding agent</text>
+        <text x="95" y="110" text-anchor="middle" class="d-sub" font-size="10.5">Claude Code · Aider</text>
+
+        <!-- entry arrow -->
+        <line x1="170" y1="94" x2="258" y2="94" class="d-line" stroke-width="2" marker-end="url(#aAg)"/>
+        <text x="214" y="78" text-anchor="middle" class="d-accent-tx" font-size="9.5">Anthropic</text>
+        <text x="214" y="89" text-anchor="middle" class="d-accent-tx" font-size="9.5">Messages API</text>
+
+        <!-- container -->
+        <rect x="250" y="20" width="620" height="260" rx="16" class="d-box-accent"/>
+        <text x="266" y="42" class="d-title" font-size="14">freebie-frog</text>
+
+        <!-- stages -->
+        <rect x="266" y="60" width="135" height="64" rx="10" class="d-box"/>
+        <text x="333.5" y="88" text-anchor="middle" class="d-title" font-size="13">Ingress</text>
+        <text x="333.5" y="106" text-anchor="middle" class="d-sub" font-size="10">/v1/messages</text>
+
+        <rect x="417" y="60" width="135" height="64" rx="10" class="d-box"/>
+        <text x="484.5" y="88" text-anchor="middle" class="d-title" font-size="13">Router</text>
+        <text x="484.5" y="106" text-anchor="middle" class="d-sub" font-size="10">tier → targets</text>
+
+        <rect x="568" y="60" width="135" height="64" rx="10" class="d-box"/>
+        <text x="635.5" y="88" text-anchor="middle" class="d-title" font-size="13">Translate</text>
+        <text x="635.5" y="106" text-anchor="middle" class="d-sub" font-size="10">SSE rebuild</text>
+
+        <rect x="719" y="60" width="135" height="64" rx="10" class="d-box"/>
+        <text x="786.5" y="88" text-anchor="middle" class="d-title" font-size="13">Adapter</text>
+        <text x="786.5" y="106" text-anchor="middle" class="d-sub" font-size="10">openai · gemini</text>
+
+        <!-- stage arrows -->
+        <line x1="401" y1="92" x2="415" y2="92" class="d-line" stroke-width="1.8" marker-end="url(#aA)"/>
+        <line x1="552" y1="92" x2="566" y2="92" class="d-line" stroke-width="1.8" marker-end="url(#aA)"/>
+        <line x1="703" y1="92" x2="717" y2="92" class="d-line" stroke-width="1.8" marker-end="url(#aA)"/>
+
+        <!-- down to SSRF -->
+        <line x1="786.5" y1="124" x2="786.5" y2="144" class="d-line" stroke-width="1.8" marker-end="url(#aA)"/>
+
+        <!-- SSRF bar -->
+        <rect x="266" y="146" width="588" height="52" rx="10" class="d-guard"/>
+        <text x="560" y="168" text-anchor="middle" class="d-title" font-size="12.5">SSRF-guarded HTTP client</text>
+        <text x="560" y="186" text-anchor="middle" class="d-sub" font-size="10">dial-time IP validation · redirects disabled · upstream TLS verified</text>
+
+        <!-- base bar -->
+        <rect x="266" y="214" width="588" height="50" rx="10" class="d-box-2"/>
+        <text x="560" y="243" text-anchor="middle" class="d-sub" font-size="11">config + secrets　·　observability (slog · trace id)　·　admin UI</text>
+
+        <!-- egress -->
+        <line x1="854" y1="172" x2="936" y2="172" class="d-line" stroke-width="2" marker-end="url(#aA2)"/>
+        <text x="895" y="156" text-anchor="middle" class="d-accent2-tx" font-size="9.5">OpenAI /</text>
+        <text x="895" y="167" text-anchor="middle" class="d-accent2-tx" font-size="9.5">Gemini</text>
+
+        <!-- provider -->
+        <rect x="940" y="130" width="150" height="84" rx="12" class="d-box-accent2"/>
+        <text x="1015" y="168" text-anchor="middle" class="d-title" font-size="15">Provider API</text>
+        <text x="1015" y="188" text-anchor="middle" class="d-sub" font-size="10.5">free · local · paid</text>
+      </svg>
+
+      <div class="legend">
+        <span><i class="l-in"></i> ingress / your side</span>
+        <span><i class="l-out"></i> egress / provider side</span>
+        <span><i class="l-guard"></i> security boundary</span>
+      </div>
+      <p class="diagram__cap"><b>Responses return the same way.</b> The adapter streams provider chunks back through <em>Translate</em>, which rebuilds the Anthropic SSE sequence, out through ingress to the agent. Upstream base URLs are treated as attacker-influenced input — hence the guard on every outbound call.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DIAGRAM B: STREAMING -->
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">B — Streaming translation</p>
+      <h2>Rebuilding the Anthropic event stream, in order.</h2>
+      <p class="lede">The core mechanic. Provider chunks arrive loosely; the Anthropic SSE sequence must be emitted in a strict order, with tool-call arguments accumulated defensively by index.</p>
+    </div>
+
+    <div class="diagram reveal" data-delay="1">
+      <svg viewBox="0 0 1060 584" role="img" aria-label="Streaming translation: OpenAI provider chunks (delta.content, tool_calls function name and argument fragments keyed by index, reasoning_content, finish_reason and usage) are accumulated by freebie-frog and re-emitted as the ordered Anthropic SSE sequence from message_start through content blocks to message_stop.">
+        <defs>
+          <marker id="bAg" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah-g"/></marker>
+          <marker id="bA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah"/></marker>
+        </defs>
+
+        <!-- headers -->
+        <text x="30" y="26" class="d-sub" font-size="12">PROVIDER STREAM · OpenAI chunks</text>
+        <text x="610" y="26" class="d-sub" font-size="12">ANTHROPIC SSE · emitted in order</text>
+
+        <!-- LEFT input chips -->
+        <rect x="30" y="44" width="330" height="40" rx="9" class="d-box"/>
+        <text x="46" y="63" class="d-mono d-label" font-size="11.5">usage  ·  or local estimate</text>
+        <text x="46" y="77" class="d-sub" font-size="9.5">never emit 0 input tokens</text>
+
+        <rect x="30" y="150" width="330" height="40" rx="9" class="d-box"/>
+        <text x="46" y="169" class="d-mono d-label" font-size="11.5">delta.content</text>
+        <text x="46" y="183" class="d-sub" font-size="9.5">text fragments</text>
+
+        <rect x="30" y="256" width="330" height="40" rx="9" class="d-box"/>
+        <text x="46" y="275" class="d-mono d-label" font-size="11.5">tool_calls[ ].function.name</text>
+        <text x="46" y="289" class="d-sub" font-size="9.5">set on first non-empty chunk</text>
+
+        <rect x="30" y="314" width="330" height="48" rx="9" class="d-box-accent"/>
+        <text x="46" y="334" class="d-mono d-accent-tx" font-size="11.5">tool_calls[ ].function.arguments</text>
+        <text x="46" y="350" class="d-sub" font-size="9.5">partial JSON fragments · accumulated by index</text>
+
+        <rect x="30" y="384" width="330" height="40" rx="9" class="d-box"/>
+        <text x="46" y="403" class="d-mono d-label" font-size="11.5">reasoning_content</text>
+        <text x="46" y="417" class="d-sub" font-size="9.5">DeepSeek-R1 et al.</text>
+
+        <rect x="30" y="476" width="330" height="40" rx="9" class="d-box"/>
+        <text x="46" y="495" class="d-mono d-label" font-size="11.5">finish_reason  ·  usage</text>
+        <text x="46" y="509" class="d-sub" font-size="9.5">→ stop_reason mapping</text>
+
+        <!-- center spine label -->
+        <text x="455" y="300" text-anchor="middle" class="d-sub" font-size="10" transform="rotate(-90 455 300)">accumulate by index</text>
+
+        <!-- RIGHT sequence nodes -->
+        <!-- spine -->
+        <line x1="600" y1="56" x2="600" y2="548" class="d-flow-g" stroke-width="2"/>
+
+        <!-- node template: badge + box -->
+        <!-- 1 -->
+        <circle cx="600" cy="64" r="11" class="d-dot"/><text x="600" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">1</text>
+        <rect x="624" y="44" width="408" height="40" rx="9" class="d-box-accent"/>
+        <text x="640" y="63" class="d-mono d-title" font-size="12">message_start</text>
+        <text x="640" y="77" class="d-sub" font-size="9.5">seeds usage.input_tokens</text>
+
+        <!-- 2 -->
+        <circle cx="600" cy="130" r="11" class="d-dot"/><text x="600" y="134" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">2</text>
+        <rect x="624" y="110" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="129" class="d-mono d-title" font-size="12">content_block_start</text>
+        <text x="640" y="143" class="d-sub" font-size="9.5">text · block index 0</text>
+
+        <!-- 3 -->
+        <circle cx="600" cy="196" r="11" class="d-dot"/><text x="600" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">3</text>
+        <rect x="624" y="176" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="195" class="d-mono d-title" font-size="12">content_block_delta</text>
+        <text x="640" y="209" class="d-sub" font-size="9.5">text_delta  ·  thinking_delta (from reasoning)</text>
+
+        <!-- 4 -->
+        <circle cx="600" cy="262" r="11" class="d-dot"/><text x="600" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">4</text>
+        <rect x="624" y="242" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="261" class="d-mono d-title" font-size="12">content_block_stop</text>
+        <text x="640" y="275" class="d-sub" font-size="9.5">close text before the first tool block</text>
+
+        <!-- 5 -->
+        <circle cx="600" cy="328" r="11" class="d-dot"/><text x="600" y="332" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">5</text>
+        <rect x="624" y="308" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="327" class="d-mono d-title" font-size="12">content_block_start</text>
+        <text x="640" y="341" class="d-sub" font-size="9.5">tool_use · block index 1 (offset past text)</text>
+
+        <!-- 6 -->
+        <circle cx="600" cy="394" r="11" class="d-dot"/><text x="600" y="398" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">6</text>
+        <rect x="624" y="374" width="408" height="40" rx="9" class="d-box-accent"/>
+        <text x="640" y="393" class="d-mono d-accent-tx" font-size="12">content_block_delta · input_json_delta</text>
+        <text x="640" y="407" class="d-sub" font-size="9.5">re-emitted argument fragments</text>
+
+        <!-- 7 -->
+        <circle cx="600" cy="460" r="11" class="d-dot"/><text x="600" y="464" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">7</text>
+        <rect x="624" y="440" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="459" class="d-mono d-title" font-size="12">message_delta</text>
+        <text x="640" y="473" class="d-sub" font-size="9.5">stop_reason · cumulative output_tokens</text>
+
+        <!-- 8 -->
+        <circle cx="600" cy="526" r="11" class="d-dot"/><text x="600" y="530" text-anchor="middle" font-size="11" font-weight="700" fill="#05140c" class="d-mono">8</text>
+        <rect x="624" y="506" width="408" height="40" rx="9" class="d-box"/>
+        <text x="640" y="525" class="d-mono d-title" font-size="12">message_stop</text>
+        <text x="640" y="539" class="d-sub" font-size="9.5">ping events interleaved throughout</text>
+
+        <!-- mapping arrows left→right -->
+        <line x1="360" y1="64"  x2="622" y2="64"  class="d-flow-g" stroke-width="1.6" marker-end="url(#bAg)"/>
+        <line x1="360" y1="170" x2="622" y2="186" class="d-flow-g" stroke-width="1.6" marker-end="url(#bAg)"/>
+        <line x1="360" y1="276" x2="622" y2="326" class="d-flow-g" stroke-width="1.6" marker-end="url(#bAg)"/>
+        <line x1="360" y1="338" x2="622" y2="392" class="d-flow-g" stroke-width="1.6" marker-end="url(#bAg)"/>
+        <line x1="360" y1="404" x2="622" y2="200" class="d-line" stroke-width="1.4" stroke-dasharray="3 4" marker-end="url(#bA)"/>
+        <line x1="360" y1="496" x2="622" y2="458" class="d-flow-g" stroke-width="1.6" marker-end="url(#bAg)"/>
+      </svg>
+      <p class="diagram__cap"><b>Fallback has a hard boundary.</b> The router may retry another provider only <em>before</em> event 1 is sent. Once <code>message_start</code> is out, a mid-stream upstream failure cannot be retried transparently — the proxy emits an Anthropic <code>error</code> event and a terminal <code>message_stop</code>. This path is covered by golden SSE snapshot tests.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DIAGRAM C: SECURITY -->
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">C — Security placement</p>
+      <h2>Where the guard and the secrets sit.</h2>
+      <p class="lede">Keys are resolved from a backend by reference and scrubbed from every log. Every outbound dial is IP-validated, so a hostile or mistaken upstream can't reach loopback, private ranges, or cloud metadata.</p>
+    </div>
+
+    <div class="diagram reveal" data-delay="1">
+      <svg viewBox="0 0 1100 440" role="img" aria-label="Security placement: a secret store (OS keychain, encrypted file, or plaintext) resolves a key reference into the provider adapter; logs scrub headers and secrets. All outbound calls pass through the SSRF guard, which allows the configured provider host but blocks cloud metadata, loopback, and private IP ranges across IPv4 and IPv6.">
+        <defs>
+          <marker id="cAg" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah-g"/></marker>
+          <marker id="cA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah"/></marker>
+          <marker id="cAd" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" class="ah-d"/></marker>
+        </defs>
+
+        <!-- secret store -->
+        <rect x="30" y="140" width="250" height="168" rx="12" class="d-box"/>
+        <text x="48" y="166" class="d-title" font-size="13">Secret store</text>
+        <rect x="48" y="180" width="214" height="34" rx="7" class="d-box-accent"/>
+        <text x="60" y="201" class="d-mono d-accent-tx" font-size="10.5">OS keychain</text>
+        <rect x="48" y="220" width="214" height="34" rx="7" class="d-box-2"/>
+        <text x="60" y="241" class="d-mono d-label" font-size="10.5">AES-256-GCM file (PBKDF2)</text>
+        <rect x="48" y="260" width="214" height="34" rx="7" class="d-box-2"/>
+        <text x="60" y="281" class="d-mono d-label" font-size="10.5">0600 plaintext + warning</text>
+
+        <!-- arrow to core -->
+        <line x1="280" y1="224" x2="356" y2="224" class="d-flow-g" stroke-width="2" marker-end="url(#cAg)"/>
+        <text x="318" y="214" text-anchor="middle" class="d-sub" font-size="9">ref → value</text>
+
+        <!-- core -->
+        <rect x="360" y="178" width="270" height="92" rx="12" class="d-box-accent"/>
+        <text x="495" y="214" text-anchor="middle" class="d-title" font-size="14">freebie-frog</text>
+        <text x="495" y="234" text-anchor="middle" class="d-sub" font-size="10.5">provider adapter</text>
+
+        <!-- logs -->
+        <line x1="495" y1="270" x2="495" y2="322" class="d-line" stroke-width="1.8" marker-end="url(#cA)"/>
+        <text x="505" y="300" class="d-sub" font-size="9">scrub</text>
+        <rect x="360" y="324" width="270" height="70" rx="10" class="d-box-2"/>
+        <text x="495" y="352" text-anchor="middle" class="d-title" font-size="12">Structured logs</text>
+        <text x="495" y="372" text-anchor="middle" class="d-sub" font-size="10">auth headers + secret patterns redacted</text>
+
+        <!-- arrow to guard -->
+        <line x1="630" y1="212" x2="706" y2="212" class="d-flow-d" stroke-width="2" marker-end="url(#cAd)"/>
+        <text x="668" y="202" text-anchor="middle" class="d-sub" font-size="9">dial</text>
+
+        <!-- SSRF guard gate -->
+        <rect x="710" y="150" width="140" height="124" rx="12" class="d-guard"/>
+        <text x="780" y="195" text-anchor="middle" class="d-title" font-size="13">SSRF guard</text>
+        <text x="780" y="214" text-anchor="middle" class="d-sub" font-size="9.5">dial-time</text>
+        <text x="780" y="227" text-anchor="middle" class="d-sub" font-size="9.5">IP validation</text>
+        <text x="780" y="246" text-anchor="middle" class="d-sub" font-size="9.5">redirects off</text>
+
+        <!-- allowed -->
+        <line x1="850" y1="180" x2="906" y2="150" class="d-flow-g" stroke-width="2" marker-end="url(#cAg)"/>
+        <rect x="910" y="110" width="180" height="70" rx="10" class="d-box-accent"/>
+        <text x="926" y="138" class="d-title" font-size="12">Configured provider</text>
+        <text x="926" y="158" class="d-mono d-accent-tx" font-size="10.5">api.groq.com  ✓</text>
+
+        <!-- blocked -->
+        <line x1="850" y1="244" x2="906" y2="286" class="d-flow-d" stroke-width="2" marker-end="url(#cAd)"/>
+        <rect x="910" y="212" width="180" height="192" rx="10" class="d-guard"/>
+        <text x="926" y="236" class="d-danger-tx d-mono" font-size="11" font-weight="700">BLOCKED</text>
+        <text x="926" y="260" class="d-mono d-label" font-size="9.8">169.254.169.254</text>
+        <text x="926" y="274" class="d-sub" font-size="8.8">cloud metadata</text>
+        <text x="926" y="298" class="d-mono d-label" font-size="9.8">127.0.0.0/8  ·  ::1</text>
+        <text x="926" y="312" class="d-sub" font-size="8.8">loopback (v4 + v6)</text>
+        <text x="926" y="336" class="d-mono d-label" font-size="9.8">10/8 · 172.16/12 · 192.168/16</text>
+        <text x="926" y="350" class="d-sub" font-size="8.8">RFC1918 private</text>
+        <text x="926" y="374" class="d-mono d-label" font-size="9.8">fe80::/10 · fc00::/7</text>
+        <text x="926" y="388" class="d-sub" font-size="8.8">link-local · ULA · IPv4-mapped</text>
+      </svg>
+
+      <div class="legend">
+        <span><i class="l-in"></i> resolved key / allowed</span>
+        <span><i class="l-guard"></i> guard / blocked</span>
+      </div>
+      <p class="diagram__cap"><b>The local-model opt-in is scoped, not a bypass.</b> <code>allow_local</code> permits one configured host (say Ollama on loopback); the dialer still refuses any other resolved IP, which also defeats DNS rebinding. Mapped to OWASP API7 (SSRF), LLM02 (secret disclosure), and API8 (secure defaults).</p>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGN PRINCIPLES -->
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">Design principles</p>
+      <h2>The trade-offs are decided in advance.</h2>
+      <p class="lede">Five principles resolve the hard calls — and they are why the honest limits read the way they do.</p>
+    </div>
+    <div class="grid grid-2 reveal" data-delay="1">
+      <article class="card">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-7 4 14 2-7h4"/></svg></div>
+        <h3>Protocol correctness first</h3>
+        <p>The streaming SSE translation is the product. It's snapshot-tested against spec fixtures and an in-process mock, and verified against a real agent loop where credentials allow.</p>
+      </article>
+      <article class="card">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v5c0 4.5 3.2 8.4 8 10 4.8-1.6 8-5.5 8-10V6l-8-3Z"/></svg></div>
+        <h3>Security by default</h3>
+        <p>Keychain secrets, no secret logging, loopback bind, and the SSRF guard are on from the start — wired in, not bolted on, and proven with attack-tests.</p>
+      </article>
+      <article class="card">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9h16"/></svg></div>
+        <h3>One binary, few deps</h3>
+        <p>Go stdlib-first; a single optional keychain library, everything else from the standard library. The static binary is the distribution wedge — no runtime to install.</p>
+      </article>
+      <article class="card">
+        <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 7l7-4 7 4M5 7v10l7 4 7-4V7"/></svg></div>
+        <h3>Honest &amp; ToS-respecting</h3>
+        <p>BYO-key, single-account. No quota evasion, no account rotation. Claims match measured reality; the project is clean-room and trademark-clean.</p>
+      </article>
+      <article class="card" style="grid-column:1/-1">
+        <div class="card__ic card__ic--2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8 6h7a3 3 0 0 1 3 3v6M6 8v7a3 3 0 0 0 3 3h7"/></svg></div>
+        <h3>Config-driven breadth</h3>
+        <p>One generic OpenAI-compatible adapter plus a per-provider config row covers the field; a native Gemini adapter is the one extra. Runtime model discovery is preferred over hard-coded rosters, because free tiers churn constantly.</p>
+      </article>
+    </div>
+    <div class="note reveal" data-delay="1" style="margin-top:24px">
+      <span class="note__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+      <p><strong>Honest limits, by design.</strong> Token counts are approximate; not every Anthropic feature maps (prompt caching, server-side tools, fine-grained thinking budgets); provider parity varies; mid-stream failures aren't transparently recoverable; and this is a local single-user tool, not a multi-tenant security boundary.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta reveal">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <h2>Read the code behind the diagrams.</h2>
+      <p>The repository holds the translation layer, the SSRF dialer, the secret backends, and the golden SSE snapshot tests.</p>
+      <div class="hero__cta">
+        <a class="btn btn-ink" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-ink-ghost" href="docs.html">Back to the docs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <a class="brand" href="index.html" aria-label="freebie-frog home">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+          <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+        </svg>
+        <span><b>freebie</b><span class="frog">-frog</span></span>
+      </a>
+      <p>A single-binary, security-first proxy that lets Anthropic-API coding agents run on the model provider you choose — using your own keys.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Project</h4>
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer__col">
+      <h4>Source</h4>
+      <a href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">Repository</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/issues" target="_blank" rel="noopener">Issues</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0 license</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/security/advisories" target="_blank" rel="noopener">Security advisories</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="footer__bar">
+      <p class="footer__disclaimer"><strong>Independent project — not affiliated with or endorsed by Anthropic, OpenAI, or Google.</strong> "Claude Code", "Anthropic", "OpenAI", "Gemini", and other names are trademarks of their respective owners.</p>
+      <p>Apache-2.0 · BYO-key · © 2026 freebie-frog</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

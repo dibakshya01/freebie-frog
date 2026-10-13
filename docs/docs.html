@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>freebie-frog Docs</title>
+<meta name="description" content="Quick start, configuration, using freebie-frog with Claude Code, and the CLI reference (serve, run, config, doctor, providers, version).">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="freebie-frog documentation">
+<meta property="og:description" content="Install, configure, and point your coding agent at freebie-frog. Quick start, a worked config.json, and the full CLI reference.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<script>(function(){try{var t=localStorage.getItem("ff-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="index.html" aria-label="freebie-frog home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+        <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+      </svg>
+      <span><b>freebie</b><span class="frog">-frog</span></span>
+    </a>
+    <nav id="nav-links" class="nav__links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html" aria-current="page">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn-ghost btn-sm btn-ghost-ic" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Switch theme">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+      </button>
+      <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="phead">
+  <div class="wrap">
+    <div class="phead__inner">
+      <p class="eyebrow">Documentation</p>
+      <h1>Install, configure, point your agent.</h1>
+      <p class="lede">Everything here uses your own provider keys. Requires Go 1.24+.</p>
+      <nav class="toc" aria-label="On this page">
+        <a href="#quick-start">Quick start</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#claude-code">Use with Claude Code</a>
+        <a href="#cli">CLI reference</a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK START -->
+<section class="section" id="quick-start">
+  <div class="wrap">
+    <div class="sec-head reveal anchor-h">
+      <p class="eyebrow">01 — Quick start</p>
+      <h2>Up and running in a minute.</h2>
+    </div>
+
+    <div class="steps reveal" data-delay="1" style="max-width:760px">
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Install the binary</h3>
+          <p>Builds a single static binary with the Go toolchain — nothing else to run.</p>
+          <div class="cmd-light">
+            <span class="cmd__prompt" aria-hidden="true">$</span>
+            <code id="qs-install">go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest</code>
+            <button class="copy" type="button" data-copy="#qs-install" aria-label="Copy to clipboard">
+              <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+          </div>
+          <p class="muted" style="margin-top:10px;font-size:0.88rem">Prefer building from a clone? <code>make build</code> drops the binary at <code>./bin/freebie</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Check your environment</h3>
+          <p><code>doctor</code> validates your config and confirms the port is bindable before you start.</p>
+          <div class="panel" style="margin-top:14px">
+            <div class="panel__bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="fn">freebie doctor</span></div>
+            <pre><code><span class="pr">$</span> <span class="kw">freebie</span> doctor
+freebie-frog doctor
+  <span class="st">version:</span>    dev
+  <span class="st">go runtime:</span> go1.24 (linux/amd64)
+  <span class="st">[ok]</span>   config loaded and valid
+  <span class="st">[ok]</span>   address 127.0.0.1:4000 is bindable
+all checks passed</code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Start the server</h3>
+          <p>Binds <code>127.0.0.1:4000</code> by default and streams Server-Sent Events. Ctrl-C to stop.</p>
+          <div class="cmd-light">
+            <span class="cmd__prompt" aria-hidden="true">$</span>
+            <code id="qs-serve">freebie serve --config ./config.json</code>
+            <button class="copy" type="button" data-copy="#qs-serve" aria-label="Copy to clipboard">
+              <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFIGURATION -->
+<section class="section" id="configuration" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal anchor-h">
+      <p class="eyebrow">02 — Configuration</p>
+      <h2>One JSON file: providers, keys, and routing.</h2>
+      <p class="lede">Resolved as <strong>defaults → JSON file → environment variables</strong>, then validated. The config stores a <em>reference</em> to each key, never the key itself.</p>
+    </div>
+
+    <div class="grid grid-2 reveal" data-delay="1" style="align-items:start">
+      <div class="panel" style="min-width:0">
+        <div class="panel__bar">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="fn">config.json</span>
+          <button class="copy" type="button" data-copy="#cfg-json" aria-label="Copy config to clipboard">
+            <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+        </div>
+<pre><code id="cfg-json">{
+  <span class="nk">"server"</span>: {
+    <span class="nk">"addr"</span>: <span class="st">"127.0.0.1:4000"</span>,
+    <span class="nk">"read_timeout"</span>: <span class="st">"30s"</span>,
+    <span class="nk">"write_timeout"</span>: <span class="st">"0s"</span>,
+    <span class="nk">"shutdown_timeout"</span>: <span class="st">"15s"</span>
+  },
+  <span class="nk">"log"</span>: { <span class="nk">"level"</span>: <span class="st">"info"</span>, <span class="nk">"format"</span>: <span class="st">"text"</span> },
+  <span class="nk">"providers"</span>: {
+    <span class="nk">"groq"</span>: {
+      <span class="nk">"type"</span>: <span class="st">"openai"</span>,
+      <span class="nk">"base_url"</span>: <span class="st">"https://api.groq.com/openai/v1"</span>,
+      <span class="nk">"api_key_ref"</span>: <span class="st">"env:GROQ_API_KEY"</span>,
+      <span class="nk">"models"</span>: [<span class="st">"llama-3.3-70b-versatile"</span>, <span class="st">"llama-3.1-8b-instant"</span>]
+    },
+    <span class="nk">"openrouter"</span>: {
+      <span class="nk">"type"</span>: <span class="st">"openai"</span>,
+      <span class="nk">"base_url"</span>: <span class="st">"https://openrouter.ai/api/v1"</span>,
+      <span class="nk">"api_key_ref"</span>: <span class="st">"env:OPENROUTER_API_KEY"</span>,
+      <span class="nk">"models"</span>: [<span class="st">"deepseek/deepseek-chat-v3:free"</span>]
+    },
+    <span class="nk">"ollama"</span>: {
+      <span class="nk">"type"</span>: <span class="st">"openai"</span>,
+      <span class="nk">"base_url"</span>: <span class="st">"http://localhost:11434/v1"</span>,
+      <span class="nk">"allow_local"</span>: <span class="kw">true</span>,
+      <span class="nk">"models"</span>: [<span class="st">"qwen2.5-coder:7b"</span>]
+    }
+  },
+  <span class="nk">"models"</span>: {
+    <span class="nk">"default"</span>: [
+      <span class="st">"groq/llama-3.3-70b-versatile"</span>,
+      <span class="st">"openrouter/deepseek/deepseek-chat-v3:free"</span>,
+      <span class="st">"ollama/qwen2.5-coder:7b"</span>
+    ],
+    <span class="nk">"tiers"</span>: {
+      <span class="nk">"haiku"</span>: [<span class="st">"groq/llama-3.1-8b-instant"</span>, <span class="st">"ollama/qwen2.5-coder:7b"</span>]
+    }
+  }
+}</code></pre>
+      </div>
+
+      <div class="stack" style="gap:16px;min-width:0">
+        <dl class="kv">
+          <div><dt>api_key_ref</dt><dd>A <em>reference</em>, not the secret: <code>env:NAME</code>, an OS-keychain entry, or an encrypted-file entry. The value is resolved at runtime and never written to the config or the logs.</dd></div>
+          <div><dt>type</dt><dd><code>openai</code> covers the whole OpenAI-compatible field. A native <code>gemini</code> adapter and an <code>anthropic</code> passthrough are the other two.</dd></div>
+          <div><dt>allow_local</dt><dd>A scoped opt-in that allowlists one local host for a provider (e.g. Ollama). Dial-time IP checks still apply — it's not a blanket disable of the SSRF guard.</dd></div>
+          <div><dt>models.default</dt><dd>The ordered fallback chain. Requests try each <code>provider/model</code> in turn on a retryable failure.</dd></div>
+          <div><dt>models.tiers</dt><dd>Map an incoming family (<code>opus/sonnet/haiku/fable</code>, matched by substring) to its own ordered chain.</dd></div>
+        </dl>
+        <div class="note note--warn">
+          <span class="note__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+          <p><strong>Never commit secrets.</strong> Keep keys in environment variables or a secret backend. <code>write_timeout</code> is <code>0</code> on purpose — the proxy's job is long-lived SSE streaming, which a non-zero write timeout would cut off.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="muted reveal" data-delay="2" style="margin-top:18px;font-size:0.9rem">Override any server field from the environment: <code>FREEBIE_SERVER_ADDR</code>, <code>FREEBIE_LOG_LEVEL</code>, <code>FREEBIE_LOG_FORMAT</code>, <code>FREEBIE_SERVER_READ_TIMEOUT</code>, <code>FREEBIE_SERVER_WRITE_TIMEOUT</code>, <code>FREEBIE_SERVER_SHUTDOWN_TIMEOUT</code>.</p>
+  </div>
+</section>
+
+<!-- USE WITH CLAUDE CODE -->
+<section class="section" id="claude-code">
+  <div class="wrap">
+    <div class="sec-head reveal anchor-h">
+      <p class="eyebrow">03 — Use with Claude Code</p>
+      <h2>Point the agent at the proxy.</h2>
+      <p class="lede">Claude Code honors <code>ANTHROPIC_BASE_URL</code> and an auth token — that's the whole hook. Set them, start the server, run the agent.</p>
+    </div>
+
+    <div class="grid grid-2 reveal" data-delay="1" style="align-items:start">
+      <div class="stack" style="gap:16px;min-width:0">
+        <div class="panel">
+          <div class="panel__bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="fn">terminal</span>
+            <button class="copy" type="button" data-copy="#cc-manual" aria-label="Copy to clipboard">
+              <svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+          </div>
+<pre><code id="cc-manual"><span class="cm"># 1. start freebie-frog (binds 127.0.0.1:4000)</span>
+<span class="pr">$</span> <span class="kw">freebie</span> serve --config ./config.json
+
+<span class="cm"># 2. in another shell, point the agent at it</span>
+<span class="pr">$</span> <span class="kw">export</span> ANTHROPIC_BASE_URL=<span class="st">"http://localhost:4000"</span>
+<span class="pr">$</span> <span class="kw">export</span> ANTHROPIC_AUTH_TOKEN=<span class="st">"local-dev"</span>
+
+<span class="cm"># 3. run your agent as usual</span>
+<span class="pr">$</span> <span class="kw">claude</span></code></pre>
+        </div>
+        <p class="muted" style="font-size:0.9rem">On loopback the token is only a formality; set it to any value. If you bind to a non-loopback address, a real ingress token becomes mandatory.</p>
+      </div>
+
+      <div class="stack" style="gap:16px;min-width:0">
+        <div class="card">
+          <div class="card__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg></div>
+          <h3>What the agent sees</h3>
+          <p>An ordinary Anthropic endpoint: <code>/v1/messages</code>, <code>/v1/messages/count_tokens</code>, and <code>/v1/models</code>. Streaming returns the usual SSE events, so the agent's tool loop keeps working.</p>
+        </div>
+        <div class="card">
+          <div class="card__ic card__ic--2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></div>
+          <h3>What happens behind it</h3>
+          <p>The incoming model is matched to its routing chain, the request is translated, and the first reachable provider answers. If one is throttled before streaming begins, the next is tried automatically.</p>
+        </div>
+        <div class="note">
+          <span class="note__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+          <p>The same <code>ANTHROPIC_BASE_URL</code> hook works for any Anthropic-API agent (Codex, Aider, and others). <code>freebie run &lt;agent&gt;</code> will launch a supported agent with these variables set for you.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLI -->
+<section class="section" id="cli" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal anchor-h">
+      <p class="eyebrow">04 — CLI reference</p>
+      <h2>Six commands.</h2>
+      <p class="lede">The <span class="tag tag--ship" style="margin:0">shipped</span> commands work in the current scaffold; <span class="tag tag--road" style="margin:0">roadmap</span> commands are specified and in progress.</p>
+    </div>
+    <div class="table-wrap reveal" data-delay="1">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><span class="cmd-name">serve</span></td><td>Start the proxy server. Flag: <code>--config &lt;path&gt;</code> (defaults to <code>./config.json</code> if present).</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
+          <tr><td><span class="cmd-name">run</span></td><td>Launch a supported agent CLI (<code>freebie run claude</code>) with <code>ANTHROPIC_BASE_URL</code> and the auth token pre-set.</td><td><span class="tag tag--road" style="margin:0">roadmap</span></td></tr>
+          <tr><td><span class="cmd-name">config</span></td><td>Print the resolved configuration (defaults + file + env) and exit.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
+          <tr><td><span class="cmd-name">doctor</span></td><td>Run diagnostics: validate config and confirm the server address is bindable.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
+          <tr><td><span class="cmd-name">providers</span></td><td>List configured providers and the models each exposes.</td><td><span class="tag tag--road" style="margin:0">roadmap</span></td></tr>
+          <tr><td><span class="cmd-name">version</span></td><td>Print the build version.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted reveal" data-delay="2" style="margin-top:16px;font-size:0.9rem">freebie-frog is in active development. The operational skeleton (serve, config, doctor, version, CI) is in place; the translating core, router, security hardening, Gemini adapter, launchers, and admin UI follow the milestones in the project plan.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta reveal">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <h2>See how the translation works.</h2>
+      <p>The architecture page has the real component, streaming, and security diagrams.</p>
+      <div class="hero__cta">
+        <a class="btn btn-ink" href="architecture.html">Open the architecture</a>
+        <a class="btn btn-ink-ghost" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">Browse the source</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <a class="brand" href="index.html" aria-label="freebie-frog home">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+          <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+        </svg>
+        <span><b>freebie</b><span class="frog">-frog</span></span>
+      </a>
+      <p>A single-binary, security-first proxy that lets Anthropic-API coding agents run on the model provider you choose — using your own keys.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Project</h4>
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer__col">
+      <h4>Source</h4>
+      <a href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">Repository</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/issues" target="_blank" rel="noopener">Issues</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0 license</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/security/advisories" target="_blank" rel="noopener">Security advisories</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="footer__bar">
+      <p class="footer__disclaimer"><strong>Independent project — not affiliated with or endorsed by Anthropic, OpenAI, or Google.</strong> "Claude Code", "Anthropic", "OpenAI", "Gemini", and other names are trademarks of their respective owners.</p>
+      <p>Apache-2.0 · BYO-key · © 2026 freebie-frog</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

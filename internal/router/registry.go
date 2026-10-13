@@ -49,8 +49,10 @@ func Build(cfg *config.Config, store *secret.Store) (*Registry, error) {
 		switch pc.Type {
 		case "openai":
 			ad = provider.NewOpenAICompatible(name, pc.BaseURL, key, client, quirksOf(pc))
-		case "gemini", "anthropic":
-			return nil, fmt.Errorf("provider %q: adapter type %q is not available in this build", name, pc.Type)
+		case "gemini":
+			ad = provider.NewGeminiAdapter(name, pc.BaseURL, key, client)
+		case "anthropic":
+			ad = provider.NewPassthroughAdapter(name, pc.BaseURL, key, client)
 		default:
 			return nil, fmt.Errorf("provider %q: unknown type %q", name, pc.Type)
 		}
@@ -124,7 +126,7 @@ func quirksOf(pc config.Provider) translate.Quirks {
 
 func buildClient(pc config.Provider) (*http.Client, error) {
 	policy := security.DialPolicy{}
-	if pc.AllowLocal {
+	if pc.AllowLocal && pc.BaseURL != "" {
 		host, err := hostOf(pc.BaseURL)
 		if err != nil {
 			return nil, err

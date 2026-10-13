@@ -268,22 +268,22 @@ all checks passed</code></pre>
     <div class="sec-head reveal anchor-h">
       <p class="eyebrow">04 — CLI reference</p>
       <h2>Six commands.</h2>
-      <p class="lede">The <span class="tag tag--ship" style="margin:0">shipped</span> commands work in the current scaffold; <span class="tag tag--road" style="margin:0">roadmap</span> commands are specified and in progress.</p>
+      <p class="lede">All commands below ship in the current build.</p>
     </div>
     <div class="table-wrap reveal" data-delay="1">
       <table>
         <thead><tr><th>Command</th><th>What it does</th><th>Status</th></tr></thead>
         <tbody>
           <tr><td><span class="cmd-name">serve</span></td><td>Start the proxy server. Flag: <code>--config &lt;path&gt;</code> (defaults to <code>./config.json</code> if present).</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
-          <tr><td><span class="cmd-name">run</span></td><td>Launch a supported agent CLI (<code>freebie run claude</code>) with <code>ANTHROPIC_BASE_URL</code> and the auth token pre-set.</td><td><span class="tag tag--road" style="margin:0">roadmap</span></td></tr>
+          <tr><td><span class="cmd-name">run</span></td><td>Launch a supported agent CLI (<code>freebie run claude</code>) with <code>ANTHROPIC_BASE_URL</code> and the auth token pre-set.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
           <tr><td><span class="cmd-name">config</span></td><td>Print the resolved configuration (defaults + file + env) and exit.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
           <tr><td><span class="cmd-name">doctor</span></td><td>Run diagnostics: validate config and confirm the server address is bindable.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
-          <tr><td><span class="cmd-name">providers</span></td><td>List configured providers and the models each exposes.</td><td><span class="tag tag--road" style="margin:0">roadmap</span></td></tr>
+          <tr><td><span class="cmd-name">providers</span></td><td>List configured providers and the models each exposes.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
           <tr><td><span class="cmd-name">version</span></td><td>Print the build version.</td><td><span class="tag tag--ship" style="margin:0">shipped</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="muted reveal" data-delay="2" style="margin-top:16px;font-size:0.9rem">freebie-frog is in active development. The operational skeleton (serve, config, doctor, version, CI) is in place; the translating core, router, security hardening, Gemini adapter, launchers, and admin UI follow the milestones in the project plan.</p>
+    <p class="muted reveal" data-delay="2" style="margin-top:16px;font-size:0.9rem">The full suite is implemented and tested: the translating core (streaming + non-streaming), the router with multi-provider fallback, OpenAI-compatible / Gemini / Anthropic-passthrough adapters, security hardening (SSRF guard, secret backends, ingress auth), the agent launchers, and the read-only admin dashboard. It is pre-1.0 — evaluate it before depending on it for anything critical.</p>
   </div>
 </section>
 

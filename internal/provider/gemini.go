@@ -11,6 +11,7 @@ import (
 
 	"github.com/dibakshya01/freebie-frog/internal/anthropic"
 	"github.com/dibakshya01/freebie-frog/internal/gemini"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 	"github.com/dibakshya01/freebie-frog/internal/translate"
 )
 
@@ -139,7 +140,7 @@ func (a *GeminiAdapter) Stream(ctx context.Context, req *anthropic.Request, t Ta
 	}
 
 	tr := translate.NewGeminiStreamTranslator(req, req.Model)
-	runErr := tr.Run(resp.Body, sinkFn)
+	runErr := tr.Run(io.LimitReader(resp.Body, maxStreamBytes), sinkFn)
 	if runErr != nil && !tr.Started() {
 		// Nothing emitted yet -> the router may fall back.
 		return &Error{StatusCode: 502, Type: "api_error", Message: "upstream stream failed: " + runErr.Error(), Retryable: true}
@@ -170,7 +171,7 @@ func geminiHTTPError(status int, body []byte) *Error {
 func geminiMessage(body []byte, status int) string {
 	var env gemini.ErrorEnvelope
 	if err := json.Unmarshal(body, &env); err == nil && env.Error.Message != "" {
-		return env.Error.Message
+		return security.Scrub(env.Error.Message)
 	}
 	s := strings.TrimSpace(string(body))
 	if s == "" {
@@ -179,5 +180,5 @@ func geminiMessage(body []byte, status int) string {
 	if len(s) > 500 {
 		s = s[:500]
 	}
-	return s
+	return security.Scrub(s)
 }

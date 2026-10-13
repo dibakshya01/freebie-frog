@@ -56,3 +56,12 @@ func (r *Redactor) Redact(s string) string {
 func NeutralizeNewlines(s string) string {
 	return strings.NewReplacer("\r", " ", "\n", " ").Replace(s)
 }
+
+// defaultRedactor scrubs key-shaped patterns (no known values).
+var defaultRedactor = NewRedactor()
+
+// Scrub removes key-shaped substrings from s. Use it on any upstream-derived text
+// (error bodies, messages) before it is logged or returned to a client.
+func Scrub(s string) string {
+	return defaultRedactor.Redact(s)
+}

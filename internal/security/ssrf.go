@@ -15,7 +15,12 @@ import (
 // multicast, unspecified). Carrier-grade NAT is included defensively.
 var extraBlockedCIDRs = []string{
 	"0.0.0.0/8",
-	"100.64.0.0/10", // CGNAT
+	"100.64.0.0/10",  // CGNAT
+	"192.0.0.0/24",   // IETF protocol assignments
+	"240.0.0.0/4",    // reserved
+	"::/96",          // deprecated IPv4-compatible IPv6
+	"64:ff9b::/96",   // NAT64 (could map to internal IPv4, incl. metadata)
+	"64:ff9b:1::/48", // NAT64 local-use
 }
 
 var extraBlockedNets = mustParseCIDRs(extraBlockedCIDRs)

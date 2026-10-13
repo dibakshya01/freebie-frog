@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/dibakshya01/freebie-frog/internal/anthropic"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 )
 
 // defaultAnthropicBaseURL is the public Anthropic Messages API root.
@@ -129,7 +130,7 @@ func (a *PassthroughAdapter) Stream(ctx context.Context, req *anthropic.Request,
 		return anthropicHTTPError(resp.StatusCode, data)
 	}
 
-	return relayAnthropicSSE(resp.Body, sinkFn)
+	return relayAnthropicSSE(io.LimitReader(resp.Body, maxStreamBytes), sinkFn)
 }
 
 // relayAnthropicSSE parses an Anthropic SSE body (event: / data: pairs separated by
@@ -239,7 +240,7 @@ func anthropicHTTPError(status int, body []byte) *Error {
 func anthropicMessage(body []byte, status int) string {
 	var env anthropic.ErrorResponse
 	if err := json.Unmarshal(body, &env); err == nil && env.Error.Message != "" {
-		return env.Error.Message
+		return security.Scrub(env.Error.Message)
 	}
 	s := strings.TrimSpace(string(body))
 	if s == "" {
@@ -248,5 +249,5 @@ func anthropicMessage(body []byte, status int) string {
 	if len(s) > 500 {
 		s = s[:500]
 	}
-	return s
+	return security.Scrub(s)
 }

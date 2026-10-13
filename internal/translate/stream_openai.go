@@ -18,20 +18,31 @@ var ErrEmptyStream = errors.New("empty provider stream")
 // sink is the callback that receives translated Anthropic SSE events.
 type sink = func(anthropic.StreamEvent) error
 
-// OpenAIStreamTranslator reconstructs the Anthropic SSE event sequence from an
-// OpenAI Chat Completions SSE stream. It implements the lifecycle described in
-// build-plan.md FR-8: a single content block is open at a time; OpenAI
-// tool_call indices are remapped to Anthropic content-block indices offset by any
-// preceding text/thinking block; tool arguments become input_json_delta fragments.
+// pendingTool buffers a streaming tool call until its name is known, so the Anthropic
+// content_block_start carries the real id/name even when the provider sends arguments
+// before (or without) the name on the first chunk (FR-8 defensive accumulation).
+type pendingTool struct {
+	key       int // OpenAI tool_calls index, or a synthetic negative key when absent
+	anthIndex int
+	id        string
+	name      string
+	args      bytes.Buffer
+	open      bool
+}
+
+// OpenAIStreamTranslator reconstructs the Anthropic SSE event sequence from an OpenAI
+// Chat Completions SSE stream (build-plan.md FR-8).
 type OpenAIStreamTranslator struct {
 	model       string
 	inputTokens int
 
-	started      bool
-	nextIndex    int    // next Anthropic content-block index to assign
-	openIndex    int    // currently open block index, or -1
-	openKind     string // "", "text", "thinking", "tool"
-	curToolOA    int    // OpenAI tool index of the currently open tool block, or -1
+	started   bool
+	nextIndex int    // next Anthropic content-block index to assign
+	openKind  string // "", "text", "thinking" (simple blocks)
+	openIndex int    // index of the open simple block
+	tool      *pendingTool
+	synthKey  int
+
 	sawTool      bool
 	finishReason *string
 	usage        *openai.Usage
@@ -45,7 +56,6 @@ func NewOpenAIStreamTranslator(req *anthropic.Request, model string) *OpenAIStre
 		model:       model,
 		inputTokens: EstimateRequestTokens(req),
 		openIndex:   -1,
-		curToolOA:   -1,
 	}
 }
 
@@ -53,10 +63,7 @@ func NewOpenAIStreamTranslator(req *anthropic.Request, model string) *OpenAIStre
 // Started() is false, the caller may safely fall back to another provider.
 func (t *OpenAIStreamTranslator) Started() bool { return t.started }
 
-// Run consumes the OpenAI SSE body and emits Anthropic events via out. If the stream
-// fails after the first event was emitted, Run emits an Anthropic error event and
-// returns nil (the request is handled, no fallback). If it fails before any event,
-// Run returns a non-nil error so the caller can fall back.
+// Run consumes the OpenAI SSE body and emits Anthropic events via out.
 func (t *OpenAIStreamTranslator) Run(r io.Reader, out sink) error {
 	reader := bufio.NewReaderSize(r, 1<<16)
 	for {
@@ -75,7 +82,7 @@ func (t *OpenAIStreamTranslator) Run(r io.Reader, out sink) error {
 				break
 			}
 			if t.started {
-				_ = t.emitError(out, "upstream stream error: "+err.Error())
+				t.terminateWithError(out, "upstream stream error: "+err.Error())
 				return nil
 			}
 			return err
@@ -87,14 +94,13 @@ func (t *OpenAIStreamTranslator) Run(r io.Reader, out sink) error {
 	return t.finalize(out)
 }
 
-// processLine handles one non-empty SSE line. Returns done=true on "data: [DONE]".
 func (t *OpenAIStreamTranslator) processLine(line []byte, out sink) (bool, error) {
-	if line[0] == ':' { // SSE comment / keep-alive
+	if line[0] == ':' {
 		return false, nil
 	}
 	data, ok := bytes.CutPrefix(line, []byte("data:"))
 	if !ok {
-		return false, nil // ignore event:/id: lines
+		return false, nil
 	}
 	data = bytes.TrimSpace(data)
 	if string(data) == "[DONE]" {
@@ -120,7 +126,7 @@ func (t *OpenAIStreamTranslator) processLine(line []byte, out sink) (bool, error
 		}
 		d := ch.Delta
 		if d.ReasoningContent != nil && *d.ReasoningContent != "" {
-			if err := t.openBlock(out, "thinking"); err != nil {
+			if err := t.openSimple(out, "thinking"); err != nil {
 				return false, err
 			}
 			t.outChars += len(*d.ReasoningContent)
@@ -132,7 +138,7 @@ func (t *OpenAIStreamTranslator) processLine(line []byte, out sink) (bool, error
 			}
 		}
 		if d.Content != nil && *d.Content != "" {
-			if err := t.openBlock(out, "text"); err != nil {
+			if err := t.openSimple(out, "text"); err != nil {
 				return false, err
 			}
 			t.outChars += len(*d.Content)
@@ -152,56 +158,112 @@ func (t *OpenAIStreamTranslator) processLine(line []byte, out sink) (bool, error
 	return false, nil
 }
 
-func (t *OpenAIStreamTranslator) handleToolCall(out sink, tc openai.ToolCall) error {
-	oaIdx := 0
+func (t *OpenAIStreamTranslator) toolKeyFor(tc openai.ToolCall) int {
 	if tc.Index != nil {
-		oaIdx = *tc.Index
+		return *tc.Index
 	}
-	if t.openKind != "tool" || t.curToolOA != oaIdx {
-		if err := t.closeCurrent(out); err != nil {
+	// No index: a tool call carrying an id (or when none is active) starts a new slot;
+	// otherwise it continues the current index-less tool.
+	if t.tool != nil && tc.ID == "" {
+		return t.tool.key
+	}
+	t.synthKey--
+	return t.synthKey
+}
+
+func (t *OpenAIStreamTranslator) handleToolCall(out sink, tc openai.ToolCall) error {
+	key := t.toolKeyFor(tc)
+	if t.tool == nil || t.tool.key != key {
+		if err := t.finishTool(out); err != nil {
 			return err
 		}
-		idx := t.nextIndex
-		t.nextIndex++
-		t.openIndex = idx
-		t.openKind = "tool"
-		t.curToolOA = oaIdx
-		t.sawTool = true
-		if err := emit(out, "content_block_start", anthropic.ContentBlockStart{
-			Type: "content_block_start", Index: idx,
-			ContentBlock: anthropic.ContentBlock{
-				Type:  "tool_use",
-				ID:    tc.ID,
-				Name:  tc.Function.Name,
-				Input: json.RawMessage("{}"),
-			},
-		}); err != nil {
-			return err
-		}
+		t.tool = &pendingTool{key: key}
+	}
+	if tc.ID != "" {
+		t.tool.id = tc.ID
+	}
+	if tc.Function.Name != "" {
+		t.tool.name = tc.Function.Name
+	}
+	if err := t.tryOpenTool(out); err != nil {
+		return err
 	}
 	if tc.Function.Arguments != "" {
 		t.outChars += len(tc.Function.Arguments)
+		if t.tool.open {
+			return emit(out, "content_block_delta", anthropic.ContentBlockDelta{
+				Type: "content_block_delta", Index: t.tool.anthIndex,
+				Delta: anthropic.StreamDelta{Type: "input_json_delta", PartialJSON: tc.Function.Arguments},
+			})
+		}
+		t.tool.args.WriteString(tc.Function.Arguments)
+	}
+	return nil
+}
+
+// tryOpenTool emits content_block_start once the tool's name is known, flushing any
+// buffered argument fragments.
+func (t *OpenAIStreamTranslator) tryOpenTool(out sink) error {
+	if t.tool == nil || t.tool.open || t.tool.name == "" {
+		return nil
+	}
+	return t.openTool(out)
+}
+
+func (t *OpenAIStreamTranslator) openTool(out sink) error {
+	if err := t.closeSimple(out); err != nil {
+		return err
+	}
+	t.tool.anthIndex = t.nextIndex
+	t.nextIndex++
+	t.tool.open = true
+	t.sawTool = true
+	if err := emit(out, "content_block_start", anthropic.ContentBlockStart{
+		Type: "content_block_start", Index: t.tool.anthIndex,
+		ContentBlock: anthropic.ContentBlock{Type: "tool_use", ID: t.tool.id, Name: t.tool.name, Input: json.RawMessage("{}")},
+	}); err != nil {
+		return err
+	}
+	if t.tool.args.Len() > 0 {
+		args := t.tool.args.String()
+		t.tool.args.Reset()
 		return emit(out, "content_block_delta", anthropic.ContentBlockDelta{
-			Type: "content_block_delta", Index: t.openIndex,
-			Delta: anthropic.StreamDelta{Type: "input_json_delta", PartialJSON: tc.Function.Arguments},
+			Type: "content_block_delta", Index: t.tool.anthIndex,
+			Delta: anthropic.StreamDelta{Type: "input_json_delta", PartialJSON: args},
 		})
 	}
 	return nil
 }
 
-// openBlock ensures a text/thinking block of the given kind is open.
-func (t *OpenAIStreamTranslator) openBlock(out sink, kind string) error {
+// finishTool closes the current tool block (opening it best-effort first if the name
+// never arrived, so buffered arguments aren't lost).
+func (t *OpenAIStreamTranslator) finishTool(out sink) error {
+	if t.tool == nil {
+		return nil
+	}
+	if !t.tool.open {
+		if err := t.openTool(out); err != nil {
+			return err
+		}
+	}
+	idx := t.tool.anthIndex
+	t.tool = nil
+	return emit(out, "content_block_stop", anthropic.ContentBlockStop{Type: "content_block_stop", Index: idx})
+}
+
+func (t *OpenAIStreamTranslator) openSimple(out sink, kind string) error {
 	if t.openKind == kind {
 		return nil
 	}
-	if err := t.closeCurrent(out); err != nil {
+	if err := t.finishTool(out); err != nil {
 		return err
 	}
-	idx := t.nextIndex
+	if err := t.closeSimple(out); err != nil {
+		return err
+	}
+	t.openIndex = t.nextIndex
 	t.nextIndex++
-	t.openIndex = idx
 	t.openKind = kind
-
 	var block anthropic.ContentBlock
 	switch kind {
 	case "text":
@@ -210,18 +272,17 @@ func (t *OpenAIStreamTranslator) openBlock(out sink, kind string) error {
 		block = anthropic.ContentBlock{Type: "thinking", Thinking: ""}
 	}
 	return emit(out, "content_block_start", anthropic.ContentBlockStart{
-		Type: "content_block_start", Index: idx, ContentBlock: block,
+		Type: "content_block_start", Index: t.openIndex, ContentBlock: block,
 	})
 }
 
-func (t *OpenAIStreamTranslator) closeCurrent(out sink) error {
+func (t *OpenAIStreamTranslator) closeSimple(out sink) error {
 	if t.openKind == "" {
 		return nil
 	}
 	idx := t.openIndex
 	t.openKind = ""
 	t.openIndex = -1
-	t.curToolOA = -1
 	return emit(out, "content_block_stop", anthropic.ContentBlockStop{Type: "content_block_stop", Index: idx})
 }
 
@@ -252,7 +313,10 @@ func (t *OpenAIStreamTranslator) finalize(out sink) error {
 			return err
 		}
 	}
-	if err := t.closeCurrent(out); err != nil {
+	if err := t.finishTool(out); err != nil {
+		return err
+	}
+	if err := t.closeSimple(out); err != nil {
 		return err
 	}
 	stop := MapStopReason(t.finishReason, t.sawTool)
@@ -274,6 +338,15 @@ func (t *OpenAIStreamTranslator) finalize(out sink) error {
 		return err
 	}
 	return emit(out, "message_stop", anthropic.MessageStop{Type: "message_stop"})
+}
+
+// terminateWithError emits an error event, then closes any open block and emits
+// message_stop so a strict SSE consumer sees a terminated stream (FR-14).
+func (t *OpenAIStreamTranslator) terminateWithError(out sink, msg string) {
+	_ = t.emitError(out, msg)
+	_ = t.finishTool(out)
+	_ = t.closeSimple(out)
+	_ = emit(out, "message_stop", anthropic.MessageStop{Type: "message_stop"})
 }
 
 func (t *OpenAIStreamTranslator) emitError(out sink, msg string) error {

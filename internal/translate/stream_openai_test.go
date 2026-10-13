@@ -184,12 +184,80 @@ func TestStream_MidStreamError_EmitsErrorEvent(t *testing.T) {
 		err:  io.ErrUnexpectedEOF,
 	}
 	events := runStreamReader(t, r)
-	if len(events) == 0 || events[len(events)-1].Event != "error" {
-		t.Fatalf("expected a trailing error event, got %v", eventNames(events))
-	}
-	// message_start must have been emitted before the error (we committed).
+	names := eventNames(events)
+	// message_start first; an error event present; terminated with message_stop; any
+	// open content block closed before the stop.
 	if events[0].Event != "message_start" {
 		t.Errorf("first event = %q, want message_start", events[0].Event)
+	}
+	if !containsEvent(names, "error") {
+		t.Fatalf("expected an error event, got %v", names)
+	}
+	if names[len(names)-1] != "message_stop" {
+		t.Fatalf("stream must terminate with message_stop, got %v", names)
+	}
+	if !containsEvent(names, "content_block_stop") {
+		t.Errorf("open block should be closed on error, got %v", names)
+	}
+}
+
+func containsEvent(names []string, want string) bool {
+	for _, n := range names {
+		if n == want {
+			return true
+		}
+	}
+	return false
+}
+
+func TestStream_ToolNameAfterArgs(t *testing.T) {
+	// A provider that sends id/name only after the first argument fragment must still
+	// produce a content_block_start with the real id/name (defensive accumulation).
+	events := runStream(t, []string{
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"x\":"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_9","type":"function","function":{"name":"do_it","arguments":"1}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`,
+	}, true)
+
+	var start *anthropic.ContentBlockStart
+	var args strings.Builder
+	for _, e := range events {
+		switch p := e.Payload.(type) {
+		case anthropic.ContentBlockStart:
+			if p.ContentBlock.Type == "tool_use" {
+				cp := p
+				start = &cp
+			}
+		case anthropic.ContentBlockDelta:
+			if p.Delta.Type == "input_json_delta" {
+				args.WriteString(p.Delta.PartialJSON)
+			}
+		}
+	}
+	if start == nil || start.ContentBlock.ID != "call_9" || start.ContentBlock.Name != "do_it" {
+		t.Fatalf("tool block id/name not recovered from later chunk: %+v", start)
+	}
+	if args.String() != `{"x":1}` {
+		t.Errorf("assembled args = %q, want {\"x\":1}", args.String())
+	}
+}
+
+func TestStream_ParallelToolsWithoutIndex(t *testing.T) {
+	// Two index-less tool calls (each with its own id) must not be merged.
+	events := runStream(t, []string{
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"id":"a","type":"function","function":{"name":"f1","arguments":"{}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{"tool_calls":[{"id":"b","type":"function","function":{"name":"f2","arguments":"{}"}}]}}]}`,
+		`{"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`,
+	}, true)
+
+	var names []string
+	for _, e := range events {
+		if p, ok := e.Payload.(anthropic.ContentBlockStart); ok && p.ContentBlock.Type == "tool_use" {
+			names = append(names, p.ContentBlock.Name)
+		}
+	}
+	if len(names) != 2 || names[0] != "f1" || names[1] != "f2" {
+		t.Fatalf("expected two distinct tool blocks f1,f2; got %v", names)
 	}
 }
 

@@ -3,10 +3,17 @@ package router
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/dibakshya01/freebie-frog/internal/anthropic"
 	"github.com/dibakshya01/freebie-frog/internal/provider"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 )
+
+// completeTimeout bounds each non-streaming upstream attempt so a hung provider
+// can't tie up the request indefinitely. Streaming calls are long-lived and instead
+// rely on client-disconnect cancellation via the request context.
+const completeTimeout = 120 * time.Second
 
 // Dispatcher routes a request across its ordered targets, falling back on retryable
 // errors. For streaming, fallback is only possible before the first event is emitted.
@@ -37,7 +44,9 @@ func (d *Dispatcher) Complete(ctx context.Context, req *anthropic.Request) (*ant
 			lastErr = &provider.Error{StatusCode: 500, Type: "api_error", Message: "unknown provider " + t.Provider}
 			continue
 		}
-		resp, err := ad.Complete(ctx, req, t)
+		cctx, cancel := context.WithTimeout(ctx, completeTimeout)
+		resp, err := ad.Complete(cctx, req, t)
+		cancel()
 		if err == nil {
 			return resp, nil
 		}
@@ -45,7 +54,7 @@ func (d *Dispatcher) Complete(ctx context.Context, req *anthropic.Request) (*ant
 		if !provider.IsRetryable(err) {
 			return nil, err
 		}
-		d.log.Warn("provider failed; falling back", "provider", t.Provider, "model", t.Model, "error", err.Error())
+		d.log.Warn("provider failed; falling back", "provider", t.Provider, "model", t.Model, "error", security.Scrub(err.Error()))
 	}
 	return nil, lastErr
 }
@@ -81,7 +90,7 @@ func (d *Dispatcher) Stream(ctx context.Context, req *anthropic.Request, sink fu
 		if !provider.IsRetryable(err) {
 			return false, err
 		}
-		d.log.Warn("provider stream failed before first event; falling back", "provider", t.Provider, "model", t.Model, "error", err.Error())
+		d.log.Warn("provider stream failed before first event; falling back", "provider", t.Provider, "model", t.Model, "error", security.Scrub(err.Error()))
 	}
 	return emitted, lastErr
 }

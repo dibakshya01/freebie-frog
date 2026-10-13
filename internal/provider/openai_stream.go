@@ -45,7 +45,7 @@ func (a *OpenAICompatible) Stream(ctx context.Context, req *anthropic.Request, t
 	}
 
 	tr := translate.NewOpenAIStreamTranslator(req, req.Model)
-	runErr := tr.Run(resp.Body, sinkFn)
+	runErr := tr.Run(io.LimitReader(resp.Body, maxStreamBytes), sinkFn)
 	if runErr != nil && !tr.Started() {
 		// Nothing emitted yet -> the router may fall back.
 		return &Error{StatusCode: 502, Type: "api_error", Message: "upstream stream failed: " + runErr.Error(), Retryable: true}

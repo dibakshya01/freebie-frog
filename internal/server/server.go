@@ -100,7 +100,7 @@ func (s *Server) withRequestLogging(next http.Handler) http.Handler {
 		next.ServeHTTP(rec, r)
 		s.log.Info("request",
 			"method", r.Method,
-			"path", r.URL.Path,
+			"path", security.NeutralizeNewlines(r.URL.Path),
 			"status", rec.status,
 			"duration_ms", time.Since(start).Milliseconds(),
 			"remote", r.RemoteAddr,
@@ -117,6 +117,21 @@ type statusRecorder struct {
 func (r *statusRecorder) WriteHeader(code int) {
 	r.status = code
 	r.ResponseWriter.WriteHeader(code)
+}
+
+// Flush forwards to the underlying ResponseWriter so SSE events are delivered in
+// real time. Without this, embedding ResponseWriter as an interface hides Flush and
+// the stream is buffered (breaking live streaming). See also Unwrap.
+func (r *statusRecorder) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// Unwrap exposes the underlying ResponseWriter to http.ResponseController and to
+// any interface checks (e.g. http.Flusher) that look through wrappers.
+func (r *statusRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

@@ -64,7 +64,7 @@ func (t *GeminiStreamTranslator) Run(r io.Reader, out sink) error {
 				break
 			}
 			if t.started {
-				_ = t.emitError(out, "upstream stream error: "+err.Error())
+				t.terminateWithError(out, "upstream stream error: "+err.Error())
 				return nil
 			}
 			return err
@@ -260,4 +260,12 @@ func (t *GeminiStreamTranslator) emitError(out sink, msg string) error {
 		Type:  "error",
 		Error: anthropic.ErrorDetail{Type: "api_error", Message: msg},
 	})
+}
+
+// terminateWithError emits an error event, then closes any open block and emits
+// message_stop so a strict SSE consumer sees a terminated stream (FR-14).
+func (t *GeminiStreamTranslator) terminateWithError(out sink, msg string) {
+	_ = t.emitError(out, msg)
+	_ = t.closeCurrent(out)
+	_ = emit(out, "message_stop", anthropic.MessageStop{Type: "message_stop"})
 }

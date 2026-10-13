@@ -131,11 +131,15 @@ func TestGeminiStream_MidStreamError_EmitsErrorEvent(t *testing.T) {
 		err:  io.ErrUnexpectedEOF,
 	}
 	events := runGeminiStreamReader(t, r)
-	if len(events) == 0 || events[len(events)-1].Event != "error" {
-		t.Fatalf("expected a trailing error event, got %v", eventNames(events))
-	}
+	names := eventNames(events)
 	if events[0].Event != "message_start" {
 		t.Errorf("first event = %q, want message_start", events[0].Event)
+	}
+	if !containsEvent(names, "error") {
+		t.Fatalf("expected an error event, got %v", names)
+	}
+	if names[len(names)-1] != "message_stop" {
+		t.Fatalf("stream must terminate with message_stop, got %v", names)
 	}
 }
 

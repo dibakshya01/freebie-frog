@@ -48,7 +48,7 @@ type LogConfig struct {
 func Default() Config {
 	return Config{
 		Server: ServerConfig{
-			Addr:            ":4000",
+			Addr:            "127.0.0.1:4000",
 			ReadTimeout:     Duration(30 * time.Second),
 			WriteTimeout:    Duration(0),
 			ShutdownTimeout: Duration(15 * time.Second),

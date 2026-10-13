@@ -131,12 +131,9 @@ func buildClient(pc config.Provider) (*http.Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		policy.AllowHosts = map[string]bool{
-			strings.ToLower(host): true,
-			"localhost":           true,
-			"127.0.0.1":           true,
-			"::1":                 true,
-		}
+		// Scope the opt-in to exactly this provider's configured host; every other
+		// host is still fully SSRF-validated at dial time.
+		policy.AllowHosts = map[string]bool{strings.ToLower(host): true}
 	}
 	return security.NewHTTPClient(policy), nil
 }

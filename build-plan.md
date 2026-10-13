@@ -135,9 +135,11 @@ Config & security:
   `0.0.0.0/8`, RFC1918 (`10/8`,`172.16/12`,`192.168/16`), link-local `169.254.0.0/16`
   (incl. metadata `169.254.169.254`); **IPv6** `::1/128`, `fe80::/10`, `fc00::/7`,
   multicast, **IPv4-mapped** `::ffff:*`, and IPv6 metadata (`fd00:ec2::254`). The
-  local-model opt-in is **not** a blanket disable: it allowlists a **specific
-  configured host:port**, and dial-time validation still refuses any resolved IP other
-  than the one that host legitimately resolves to.
+  local-model opt-in is **not** a blanket disable: it is scoped to the provider's
+  **configured host** — only that host may resolve to a private/loopback address, and
+  every other host is still fully validated at dial time. (The allowed host is trusted
+  to resolve locally; its IP is not additionally pinned, so keep `allow_local` to
+  hosts you control, e.g. a local model on `127.0.0.1`.)
 - **FR-18** Server binds **loopback by default**; a non-loopback bind is explicit, is
   warned, and **requires an ingress auth token** (refused otherwise) so the proxy is
   never exposed to a network unauthenticated.
@@ -151,8 +153,12 @@ UX / ops:
   daemon's attack surface minimal). Protected by a Host-header allowlist
   (port-stripped, DNS-rebinding defense) + `Sec-Fetch-Site`/custom-header CSRF
   defense, served only on loopback, and covered by ingress auth when a token is set.
-- **FR-21** Observability: structured logs (slog), per-request trace id, usage/
-  latency, debug body capture (opt-in, redacted).
+- **FR-21** Observability: structured logs (slog) of method/path/status/latency
+  (path CR/LF-neutralized; **no request/response bodies or auth headers logged**);
+  upstream-derived error text is secret-scrubbed (key-shape patterns) before it is
+  logged or returned. (A per-request trace id and opt-in redacted body capture are
+  future enhancements; header-denylist + known-value redaction helpers are available
+  for them.)
 - **FR-22** CLI: `serve`, `run`, `config`, `doctor`, `providers`, `version`.
 - **FR-23** Streams **cancel the upstream request on client disconnect** (request
   context propagation) — no orphaned provider calls or token burn.

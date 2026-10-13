@@ -10,11 +10,17 @@ import (
 
 	"github.com/dibakshya01/freebie-frog/internal/anthropic"
 	"github.com/dibakshya01/freebie-frog/internal/openai"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 	"github.com/dibakshya01/freebie-frog/internal/translate"
 )
 
 // maxResponseBytes caps how much of a non-streaming provider response we read.
 const maxResponseBytes = 16 << 20 // 16 MiB
+
+// maxStreamBytes caps total bytes read from a streaming provider response, bounding
+// memory against an untrusted/compromised/MITM'd upstream that sends an unbounded
+// stream or a newline-less line.
+const maxStreamBytes = 64 << 20 // 64 MiB
 
 // OpenAICompatible is the generic adapter for any provider speaking the OpenAI
 // Chat Completions API (NVIDIA NIM, Groq, DeepSeek, OpenRouter, Together, Ollama,
@@ -118,11 +124,12 @@ func httpError(status int, body []byte) *Error {
 	return e
 }
 
-// providerMessage extracts a human message from an OpenAI-style error body.
+// providerMessage extracts a human message from an OpenAI-style error body, scrubbing
+// any key-shaped text so a leaky upstream can't surface a secret in logs/responses.
 func providerMessage(body []byte, status int) string {
 	var env openai.ErrorEnvelope
 	if err := json.Unmarshal(body, &env); err == nil && env.Error.Message != "" {
-		return env.Error.Message
+		return security.Scrub(env.Error.Message)
 	}
 	s := strings.TrimSpace(string(body))
 	if s == "" {
@@ -131,5 +138,5 @@ func providerMessage(body []byte, status int) string {
 	if len(s) > 500 {
 		s = s[:500]
 	}
-	return s
+	return security.Scrub(s)
 }

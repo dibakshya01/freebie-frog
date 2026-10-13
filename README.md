@@ -1,5 +1,10 @@
 # freebie-frog
 
+[![CI](https://github.com/dibakshya01/freebie-frog/actions/workflows/ci.yml/badge.svg)](https://github.com/dibakshya01/freebie-frog/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Go 1.24+](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go&logoColor=white)](go.mod)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A single-binary, **Anthropic-API-compatible proxy** that lets coding-agent CLIs
 (such as Claude Code) run against third-party, free-tier, or local model providers —
 using **your own API keys**, with correct streaming and automatic fallback.
@@ -12,6 +17,10 @@ the Anthropic Messages API format, translates them to the target provider
 > Independent open-source project. **Not affiliated with or endorsed by** Anthropic,
 > OpenAI, Google, or any model provider. "Claude Code", "Anthropic", "OpenAI",
 > "Gemini", and other names are trademarks of their respective owners.
+
+**Website:** a full guide (home, plain-English ELI5, docs, architecture) is in
+[`docs/`](docs/) and publishes to GitHub Pages once enabled (see `HANDOFF.md`):
+`https://dibakshya01.github.io/freebie-frog/`.
 
 ## Why
 

@@ -145,10 +145,12 @@ Config & security:
 UX / ops:
 - **FR-19** `freebie run <agent>` launches a supported agent CLI with env pointed at
   the proxy (`ANTHROPIC_BASE_URL`, auth token); `claude` plus a generic exec.
-- **FR-20** **Admin UI** (local web): view/edit providers, keys (masked, never
-  shown), model map, fallback; view recent requests/usage (redacted). Protected by
-  Host-header allowlist (port-stripped) + Origin/`Sec-Fetch-Site` + custom-header
-  CSRF defense + optional token auth.
+- **FR-20** **Admin UI** (local web): **read-only** dashboard of providers (keys
+  masked, never shown), model routing, and server info. Editing is done in
+  `config.json` (UI editing is a documented future enhancement — keeping the local
+  daemon's attack surface minimal). Protected by a Host-header allowlist
+  (port-stripped, DNS-rebinding defense) + `Sec-Fetch-Site`/custom-header CSRF
+  defense, served only on loopback, and covered by ingress auth when a token is set.
 - **FR-21** Observability: structured logs (slog), per-request trace id, usage/
   latency, debug body capture (opt-in, redacted).
 - **FR-22** CLI: `serve`, `run`, `config`, `doctor`, `providers`, `version`.
@@ -255,9 +257,9 @@ M0 (**done**) — scaffold: serve/config/doctor/version, `/healthz`, slog, CI.
 - **M7 — Launchers + providers CLI.** `freebie run <agent>`; `freebie providers`.
   *FRs: 19,22.* **Accept:** launcher sets env and execs a fake agent that echoes
   `ANTHROPIC_BASE_URL`.
-- **M8 — Admin UI.** Embedded local UI; Host-allowlist + CSRF + auth; edit config,
-  view redacted usage. *FR: 20.* **Accept:** UI served on loopback; rebinding/CSRF
-  tests; config edit persists.
+- **M8 — Admin UI.** Embedded local read-only dashboard (providers/routing/server,
+  keys masked); Host-allowlist + CSRF + auth. *FR: 20.* **Accept:** UI served on
+  loopback; state JSON leaks no keys; rebinding Host → 403; CSRF tests pass.
 
 CAP = milestones + 3 (hard ceiling 12). Independent milestones (M6 Gemini, M8 UI,
 and the Phase-4 site) may be built in parallel via subagents against stable

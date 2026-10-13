@@ -19,6 +19,8 @@ it's a bug — please report it.
   ordered list of provider targets; on a retryable failure it tries the next.
 - **Handle secrets reasonably.** OS keychain, encrypted file, or env — never logged.
 - **Guard against SSRF** on outbound calls and bind to loopback by default.
+- **Show a read-only local dashboard** (`/admin/`) of providers (keys masked),
+  routing, and server info — Host-allowlisted against DNS rebinding.
 
 ## It cannot (by design or by limitation)
 
@@ -47,3 +49,6 @@ it's a bug — please report it.
   payloads; injection defense is the agent's and model's responsibility.
 - **Serve as a multi-tenant security boundary.** It's a local, single-user tool.
   Network exposure is opt-in, token-gated, and at your own risk.
+- **Edit configuration from the admin UI.** The dashboard is read-only in this
+  release; change providers/routing in `config.json` and restart. (UI editing is a
+  deliberate future enhancement — it keeps the local daemon's attack surface small.)

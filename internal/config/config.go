@@ -31,6 +31,8 @@ type ServerConfig struct {
 	// AuthToken, when set, is required on ingress requests (Authorization: Bearer or
 	// x-api-key). It is mandatory when binding a non-loopback address.
 	AuthToken string `json:"auth_token,omitempty"`
+	// DisableAdmin turns off the local read-only admin dashboard (default on).
+	DisableAdmin bool `json:"disable_admin,omitempty"`
 }
 
 // LogConfig controls structured logging.

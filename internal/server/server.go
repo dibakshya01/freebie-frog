@@ -12,8 +12,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dibakshya01/freebie-frog/internal/admin"
 	"github.com/dibakshya01/freebie-frog/internal/config"
 	"github.com/dibakshya01/freebie-frog/internal/router"
+	"github.com/dibakshya01/freebie-frog/internal/security"
 	"github.com/dibakshya01/freebie-frog/internal/version"
 )
 
@@ -23,6 +25,7 @@ import (
 type Deps struct {
 	Dispatcher *router.Dispatcher
 	Registry   *router.Registry
+	Config     *config.Config // full config, for the read-only admin dashboard
 }
 
 // Server wraps an *http.Server with freebie-frog's routes and middleware.
@@ -52,6 +55,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/messages", s.handleMessages)
 	mux.HandleFunc("POST /v1/messages/count_tokens", s.handleCountTokens)
 	mux.HandleFunc("GET /v1/models", s.handleModels)
+	if !s.cfg.DisableAdmin && s.deps.Config != nil {
+		adminH := security.AdminGuard(admin.Handler(s.deps.Config))
+		mux.Handle("/admin/", adminH)
+		mux.Handle("/admin", adminH)
+	}
 	return s.withRequestLogging(s.withAuth(mux))
 }
 

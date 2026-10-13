@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>freebie-frog admin</title>
+  <link rel="stylesheet" href="/admin/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> freebie-frog <span class="ver" id="version"></span></div>
+    <div class="muted">local admin · read-only</div>
+  </header>
+
+  <main>
+    <section class="card" id="server-card">
+      <h2>Server</h2>
+      <div id="server"></div>
+    </section>
+
+    <section class="card">
+      <h2>Providers <span class="muted" id="provider-count"></span></h2>
+      <div id="providers" class="grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>Model routing</h2>
+      <div id="routing"></div>
+    </section>
+
+    <p class="foot muted">
+      Keys are never shown here. Edit providers and routing in <code>config.json</code>
+      and restart. See the project README.
+    </p>
+  </main>
+
+  <script src="/admin/assets/app.js"></script>
+</body>
+</html>

@@ -57,3 +57,19 @@ A running, one-line-per-step record of the freebie-frog build.
     SSRF IPv4/IPv6 ranges; e2e via mock (non-stream, stream, 503, 400, count_tokens).
   - Early partials: M3 (count_tokens, /v1/models, images, multiturn), M4 (fallback
     engine), M5 (SSRF client). `go test -race ./...` green; vet + gofmt clean; binary builds.
+- M3 complete: tools/images/multi-turn round-trips, count_tokens, /v1/models (tested).
+- M4 complete: router fallback (retryable vs non-retryable, no-route, pre-first-event
+  stream fallback) with dispatch tests.
+- M5 complete (delegated streaming core done by me): keychain + PBKDF2/AES-GCM
+  encrypted-file + file/env/literal secret backends; log redaction (header denylist +
+  known-value scrub + key patterns); ingress auth + loopback-default + non-loopback
+  refuses without token. Attack-tests green.
+- M6 complete (subagent, reviewed + wired by me): Gemini native adapter + Anthropic
+  passthrough; 21 tests. Edge case (allow_local + empty base_url) hardened.
+- M7 complete: `freebie run <agent>` launcher (verified against a fake agent) +
+  `freebie providers`.
+- M8 complete: read-only admin dashboard (go:embed), keys masked, Host-allowlist
+  (DNS-rebinding defense) + CSRF guard; verified live (state leaks no keys, rebinding
+  Host -> 403). Spec FR-20 + CAPABILITIES updated to read-only scope (honesty).
+- Phase 3 DONE. Full `go test -race ./...` green across 11 packages; gofmt + vet clean.
+- Website (Phase 4) built in parallel by a subagent (docs/).

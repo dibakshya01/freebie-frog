@@ -85,13 +85,14 @@ func cmdServe(args []string) error {
 		logger.Warn("binding a non-loopback address; ingress auth token is required and enabled", "addr", cfg.Server.Addr)
 	}
 
-	var deps server.Deps
+	deps := server.Deps{Config: &cfg}
 	if len(cfg.Providers) > 0 {
 		reg, err := router.Build(&cfg, secret.New())
 		if err != nil {
 			return err
 		}
-		deps = server.Deps{Registry: reg, Dispatcher: router.NewDispatcher(reg, logger)}
+		deps.Registry = reg
+		deps.Dispatcher = router.NewDispatcher(reg, logger)
 	} else {
 		logger.Warn("no providers configured; the Messages API will return 503 until you add one (see README)")
 	}

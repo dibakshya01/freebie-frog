@@ -1,87 +1,130 @@
 # freebie-frog
 
-A local, **Anthropic-API-compatible proxy** that lets coding-agent CLIs (such as
-Claude Code, Codex, and Aider) run against third-party and free-tier model
-providers, using **your own API keys**.
+A single-binary, **Anthropic-API-compatible proxy** that lets coding-agent CLIs
+(such as Claude Code) run against third-party, free-tier, or local model providers —
+using **your own API keys**, with correct streaming and automatic fallback.
 
-You point an agent CLI at freebie-frog via `ANTHROPIC_BASE_URL`; it receives
-requests in the Anthropic Messages API format, translates them to the target
-provider's format (OpenAI-compatible and others), calls the provider, and
-translates the response — including the streaming event sequence — back into the
-Anthropic format. A router picks the model/provider and falls back on failure.
+Point your agent at freebie-frog via `ANTHROPIC_BASE_URL`; it receives requests in
+the Anthropic Messages API format, translates them to the target provider
+(OpenAI-compatible and Gemini), calls the provider, and translates the response —
+**including the streaming event sequence** — back into the Anthropic format.
 
-> Independent open-source project. **Not affiliated with or endorsed by**
-> Anthropic, OpenAI, or any model provider. "Claude Code", "Anthropic", "OpenAI",
-> and other names are trademarks of their respective owners.
+> Independent open-source project. **Not affiliated with or endorsed by** Anthropic,
+> OpenAI, Google, or any model provider. "Claude Code", "Anthropic", "OpenAI",
+> "Gemini", and other names are trademarks of their respective owners.
 
-## Status
+## Why
 
-**M0 — scaffold.** The operational skeleton is in place (CLI, config loader,
-health endpoint, structured logging, CI). The translating proxy itself is built
-in the milestones that follow. See [`PLAN.md`](PLAN.md) for the full roadmap and
-architecture, and [`docs/SOURCES.md`](docs/SOURCES.md) for the clean-room policy.
+- **Provider choice** — one generic OpenAI-compatible adapter reaches NVIDIA NIM,
+  Groq, DeepSeek, OpenRouter, Together, Mistral, and local servers (Ollama,
+  llama.cpp, vLLM, LM Studio); plus a native Gemini adapter and an Anthropic passthrough.
+- **Security-first defaults** — SSRF-guarded outbound calls, OS-keychain secret
+  storage, loopback bind, no secret logging.
+- **Honest** — it uses *your* keys and respects provider terms (single-account,
+  BYO-key; no quota-evasion). Free-tier availability and limits are the providers'.
+  See [docs/CAPABILITIES.md](docs/CAPABILITIES.md).
 
 ## Requirements
 
 - Go 1.24+
 
+## Install
+
+```sh
+go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest
+# or, from a clone:
+make build   # -> ./bin/freebie
+```
+
 ## Quick start
 
 ```sh
-# Build the binary into ./bin/freebie
-make build
+# 1. Create a config (see config.example.json) and set your key(s)
+cp config.example.json config.json
+export GROQ_API_KEY=gsk_...
 
-# Run diagnostics (checks config + that the port is bindable)
-./bin/freebie doctor
+# 2. Check it
+freebie doctor
 
-# Print the resolved configuration (defaults + file + env)
-./bin/freebie config
+# 3. Run the proxy (binds 127.0.0.1:4000 by default)
+freebie serve
 
-# Start the server (defaults to :4000; Ctrl-C to stop)
-./bin/freebie serve
+# 4. Point an agent at it, or launch one for you:
+freebie run claude        # launches Claude Code wired to the proxy
+# ...or manually:
+export ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+export ANTHROPIC_AUTH_TOKEN=local   # any non-empty value; real keys live in freebie's config
+claude
+```
 
-# In another shell:
+Check health directly:
+
+```sh
 curl -s localhost:4000/healthz
-# {"service":"freebie-frog","status":"ok","version":"dev"}
+curl -s localhost:4000/v1/models
 ```
 
 ## Configuration
 
-Configuration is resolved in this order (later wins): **defaults → JSON file →
-environment variables**, then validated.
+Resolved in order (later wins): **defaults → JSON file → environment**, then
+validated. Pass `--config path.json` or drop a `config.json` in the working directory.
 
-- File: pass `--config path.json`, or drop a `config.json` in the working
-  directory. See [`config.example.json`](config.example.json).
-- Environment overrides: `FREEBIE_SERVER_ADDR`, `FREEBIE_LOG_LEVEL`,
-  `FREEBIE_LOG_FORMAT`, `FREEBIE_SERVER_READ_TIMEOUT`,
-  `FREEBIE_SERVER_WRITE_TIMEOUT`, `FREEBIE_SERVER_SHUTDOWN_TIMEOUT`.
+```jsonc
+{
+  "server": { "addr": "127.0.0.1:4000" },
+  "providers": {
+    "groq":   { "type": "openai", "base_url": "https://api.groq.com/openai/v1",
+                "api_key_ref": "env:GROQ_API_KEY", "models": ["llama-3.3-70b-versatile"] },
+    "ollama": { "type": "openai", "base_url": "http://localhost:11434/v1",
+                "allow_local": true, "models": ["qwen2.5-coder:7b"] }
+  },
+  "models": {
+    "default": ["groq/llama-3.3-70b-versatile", "ollama/qwen2.5-coder:7b"],
+    "tiers":   { "haiku": ["groq/llama-3.1-8b-instant", "ollama/qwen2.5-coder:7b"] }
+  }
+}
+```
 
-> `write_timeout` defaults to `0` (no timeout) on purpose — the proxy's core job
-> is long-lived SSE streaming, which a non-zero write timeout would cut off.
+- **Keys** — prefer `api_key_ref` over an inline `api_key`. Forms: `env:NAME`
+  (OS keychain and encrypted-file backends are available in the security build).
+  Keys are **never logged**, and `config.json` is git-ignored.
+- **Routing** — an incoming model matches an exact `aliases` entry, else a `tiers`
+  entry by family substring (`opus`/`sonnet`/`haiku`/`fable`), else `default`. Each
+  value is an ordered list of `provider/model` targets tried in turn (fallback).
+- **`allow_local`** — required for a provider whose host is loopback/private (e.g. a
+  local model); the SSRF guard still validates the resolved IP at dial time.
 
-**Never commit secrets.** `config.json` and `.env` are git-ignored; provider keys
-belong there (or in environment variables), not in version control.
+## CLI
+
+```
+freebie serve      Start the proxy
+freebie run <a>    Launch an agent (e.g. claude) wired to the proxy
+freebie config     Print the resolved configuration
+freebie doctor     Environment/config diagnostics
+freebie providers  List configured providers and advertised models
+freebie version    Print the version
+```
+
+## Honest limits
+
+Token counts are approximate; not every Anthropic feature maps to every provider;
+a mid-stream provider failure cannot be transparently retried; and this is a local,
+single-user tool, not a multi-tenant security boundary. Full list:
+[docs/CAPABILITIES.md](docs/CAPABILITIES.md). Security model:
+[docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
 
 ## Development
 
 ```sh
-make check   # fmt-check + vet + test + build (what CI runs)
-make test    # go test -race ./...
-make fmt     # gofmt -w .
+make check   # fmt-check + vet + test -race + build (what CI runs)
 ```
 
-## Layout
-
-```
-cmd/freebie/        CLI entrypoint (serve, config, doctor, version)
-internal/config/    configuration + validation
-internal/obs/       structured logging (log/slog)
-internal/server/    HTTP server (health now; Messages API later)
-internal/version/   build version
-docs/               clean-room sources and notes
-```
+See [build-plan.md](build-plan.md) for the architecture and milestones,
+[finding.md](finding.md) for the research, and [docs/SOURCES.md](docs/SOURCES.md)
+for the clean-room policy.
 
 ## License
 
-TBD (a permissive license such as MIT or Apache-2.0 is planned; valid precisely
-because this is a clean-room implementation — see `PLAN.md` §0 and §9).
+[Apache-2.0](LICENSE). Clean-room implementation (see `docs/SOURCES.md`); the
+permissive license is valid precisely because it is not derived from any copyleft
+source.

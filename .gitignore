@@ -10,3 +10,6 @@ coverage.*
 config.json
 .env
 .env.*
+
+# Private launch copy (handed off, not published)
+LAUNCH.md

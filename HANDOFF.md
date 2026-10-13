@@ -4,6 +4,19 @@ This file is maintained throughout the build. Items are things that require your
 credentials, your accounts, legal/irreversible decisions, or spending — Claude
 prepares everything up to the final click.
 
+## What's shipped (so you know the state)
+
+The full proxy is implemented, tested, and pushed to branch `m0-scaffold`:
+Anthropic-compatible ingress (`/v1/messages` streaming + non-streaming,
+`count_tokens`, `models`), Anthropic↔OpenAI/Gemini translation, generic
+OpenAI-compatible + native Gemini + Anthropic-passthrough adapters, model/tier
+routing with fallback, secret backends (keychain / encrypted-file / env), SSRF
+guard, ingress auth, agent launchers, and a read-only admin dashboard. `go test
+-race ./...`, `go vet`, and `gofmt` are clean; it was hardened across repeated
+adversarial review rounds. It is pre-1.0 — evaluate before depending on it.
+
+Everything below needs **you** (accounts, keys, publishing, posting).
+
 ## 1. Run against a real provider (needed to use the tool for real)
 
 The proxy is verified end-to-end against an in-process **mock** provider (no

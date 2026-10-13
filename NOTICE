@@ -1,0 +1,11 @@
+freebie-frog
+Copyright 2026 freebie-frog contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product is an independent, clean-room implementation built only from
+public API specifications (see docs/SOURCES.md). It is NOT affiliated with,
+sponsored by, or endorsed by Anthropic, OpenAI, Google, NVIDIA, or any model
+provider. "Claude", "Claude Code", "Anthropic", "OpenAI", "ChatGPT", "Gemini",
+"NVIDIA", and other names are trademarks of their respective owners and are used
+only nominatively to describe interoperability.

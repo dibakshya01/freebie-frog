@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an idea or a new provider/agent integration
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: The use case or pain point. "I'm always frustrated when ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you'd like to happen. For a new provider, link its API docs.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: clean-room
+    attributes:
+      label: Clean-room
+      options:
+        - label: My suggestion does not involve copying code from another project (especially GPL/AGPL).
+          required: true

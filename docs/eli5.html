@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>freebie-frog Explained Simply</title>
+<meta name="description" content="freebie-frog in plain English: a universal adapter between your coding assistant and any AI model. What it is, why it exists, how to set it up, and the honest limits.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="freebie-frog, in plain English">
+<meta property="og:description" content="A universal adapter between your coding assistant and any AI model — explained for non-technical readers and team leads.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<script>(function(){try{var t=localStorage.getItem("ff-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="index.html" aria-label="freebie-frog home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+        <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+      </svg>
+      <span><b>freebie</b><span class="frog">-frog</span></span>
+    </a>
+    <nav id="nav-links" class="nav__links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="eli5.html" aria-current="page">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn-ghost btn-sm btn-ghost-ic" href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Switch theme">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+      </button>
+      <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="phead">
+  <div class="wrap">
+    <div class="phead__inner">
+      <p class="eyebrow">Explain it simply</p>
+      <h1>A universal adapter for your coding assistant.</h1>
+      <p class="lede">No jargon. If you lead a team that uses AI coding tools — or you just want the gist — this page is for you.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="analogy">
+      <div class="analogy__card analogy__card--accent reveal">
+        <div class="card__ic" style="background:color-mix(in srgb,var(--accent) 20%,transparent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7V4M17 7V4M7 7h10v3a5 5 0 0 1-10 0V7ZM12 15v5"/></svg></div>
+        <p class="big">Like a travel power adapter.</p>
+        <p>Your laptop charger is built for one kind of socket. Take it abroad and it won't fit the wall. An adapter sits in between so the same charger works anywhere. freebie-frog is that adapter — your coding assistant plugs into one shape, and freebie-frog makes it fit any model provider's socket.</p>
+      </div>
+      <div class="analogy__card reveal" data-delay="1">
+        <div class="card__ic card__ic--2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7M7.5 5c0 4-2 7-4 8M5 9c1.5 2 4 3.5 6 4"/><path d="m13 20 4-10 4 10M14.5 16.5h5"/></svg></div>
+        <p class="big">And a live translator.</p>
+        <p>Your assistant and the model speak different dialects. freebie-frog translates both ways in real time — question into the model's language, answer back into your assistant's — so neither side notices anyone translated. It even keeps the answer streaming word-by-word, the way you expect.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">Why it exists</p>
+      <h2>Your AI coding tool is usually tied to one company's models.</h2>
+    </div>
+    <div class="ticks reveal" data-delay="1" style="max-width:68ch">
+      <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p><strong>Choice.</strong> Run the same assistant on a free model, a model on your own laptop, or a paid one — whichever fits the moment.</p></div>
+      <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p><strong>Cost.</strong> Everyday work can lean on free tiers or local models, so the bill from any one provider stays small.</p></div>
+      <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p><strong>Reliability.</strong> If one free service is busy, it automatically tries the next one you've listed, so you keep working.</p></div>
+      <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p><strong>Privacy.</strong> Point it at a model running on your own machine and nothing leaves your computer.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">How you'd set it up</p>
+      <h2>Three steps, on your own computer.</h2>
+    </div>
+    <div class="steps reveal" data-delay="1" style="max-width:70ch">
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Install the small program</h3>
+          <p>It's a single file — no big install, no extra software to keep running. (Your developer runs one command; see the <a href="docs.html">docs</a>.)</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Add the keys you already have</h3>
+          <p>You bring your own free or paid accounts with the model providers. freebie-frog stores those keys safely and never prints them in its logs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step__n"></span>
+        <div class="step__body">
+          <h3>Tell your assistant to use it</h3>
+          <p>One setting points the coding assistant at freebie-frog instead of the default. From then on, it just works — on whichever model you chose.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">The honest part</p>
+      <h2>What it is not.</h2>
+      <p class="lede">The whole point of this project is to be straight with you. So:</p>
+    </div>
+    <div class="limits reveal" data-delay="1" style="max-width:74ch">
+      <div class="limit">
+        <span class="limit__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+        <div><h4>Not "unlimited free AI."</h4><p>Across providers you can expect, honestly, on the order of tens to hundreds of millions of free tokens a month — real, but capped by each provider's per-minute and per-day limits, and those change whenever the providers decide. It is not a bottomless bucket.</p></div>
+      </div>
+      <div class="limit">
+        <span class="limit__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+        <div><h4>Not a loophole.</h4><p>It uses <em>your own</em> single account with each provider. It deliberately will not juggle multiple accounts or pool quotas to dodge limits — that breaks providers' rules, and respecting them is a design choice.</p></div>
+      </div>
+      <div class="limit">
+        <span class="limit__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+        <div><h4>Not identical on every model.</h4><p>Different models have different abilities, and token counts are estimates. Most things carry across cleanly; a few advanced features don't map perfectly and are approximated or skipped.</p></div>
+      </div>
+      <div class="limit">
+        <span class="limit__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+        <div><h4>Not a shared server.</h4><p>It's a personal tool that runs on one person's machine. It isn't built to be a locked-down service for lots of untrusted users.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow">If you're the one deciding</p>
+      <h2>Talking points for leaders.</h2>
+    </div>
+    <div class="grid grid-2">
+      <article class="card reveal">
+        <h3>What you can say with confidence</h3>
+        <div class="ticks" style="margin-top:14px">
+          <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p>It's open source under Apache-2.0, with a clear patent grant — safe to evaluate and adopt.</p></div>
+          <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p>Security came first: it guards against a common class of server attack, protects stored keys, and stays on the local machine by default.</p></div>
+          <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p>It respects providers' terms of service — no quota evasion, no account juggling.</p></div>
+          <div class="tick"><span class="tick__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><p>It can keep sensitive work fully local by routing to an on-machine model.</p></div>
+        </div>
+      </article>
+      <article class="card reveal" data-delay="1">
+        <h3>What to set expectations on</h3>
+        <div class="ticks" style="margin-top:14px">
+          <div class="tick"><span class="tick__ic" style="color:var(--warn-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span><p>"Free" is real but limited and provider-dependent — plan for paid fallback on heavy days.</p></div>
+          <div class="tick"><span class="tick__ic" style="color:var(--warn-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span><p>Output quality tracks the model you pick — a small free model won't match a frontier one.</p></div>
+          <div class="tick"><span class="tick__ic" style="color:var(--warn-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span><p>It's an early-stage, community project in active development — evaluate before anything mission-critical.</p></div>
+          <div class="tick"><span class="tick__ic" style="color:var(--warn-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span><p>Review each provider's data and privacy terms before sending them company code.</p></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta reveal">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <h2>Want the technical version?</h2>
+      <p>The docs show the exact setup; the architecture page shows how the translation and the security guards actually work.</p>
+      <div class="hero__cta">
+        <a class="btn btn-ink" href="docs.html">Read the docs</a>
+        <a class="btn btn-ink-ghost" href="architecture.html">See the architecture</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <a class="brand" href="index.html" aria-label="freebie-frog home">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" class="m-arc" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="26.5" cy="24" r="4.4" class="m-eye"/><circle cx="37.5" cy="24" r="4.4" class="m-eye"/>
+          <circle cx="15" cy="46" r="5.6" class="m-src"/><circle cx="49" cy="46" r="5.6" class="m-dst"/>
+        </svg>
+        <span><b>freebie</b><span class="frog">-frog</span></span>
+      </a>
+      <p>A single-binary, security-first proxy that lets Anthropic-API coding agents run on the model provider you choose — using your own keys.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Project</h4>
+      <a href="index.html">Home</a>
+      <a href="eli5.html">Explain simply</a>
+      <a href="docs.html">Docs</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer__col">
+      <h4>Source</h4>
+      <a href="https://github.com/dibakshya01/freebie-frog" target="_blank" rel="noopener">Repository</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/issues" target="_blank" rel="noopener">Issues</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0 license</a>
+      <a href="https://github.com/dibakshya01/freebie-frog/security/advisories" target="_blank" rel="noopener">Security advisories</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="footer__bar">
+      <p class="footer__disclaimer"><strong>Independent project — not affiliated with or endorsed by Anthropic, OpenAI, or Google.</strong> "Claude Code", "Anthropic", "OpenAI", "Gemini", and other names are trademarks of their respective owners.</p>
+      <p>Apache-2.0 · BYO-key · © 2026 freebie-frog</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>freebie-frog Social Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&display=swap">
+<style>
+  :root{
+    --ink-bg:#0a0f0c; --surf:#111a14; --surf2:#17221a; --border:#243029;
+    --text:#e9efe9; --text2:#c3cdc3; --muted:#94a19a; --green:#35e089; --cyan:#57bada;
+    --font-display:"Sora",system-ui,sans-serif; --font-body:"IBM Plex Sans",system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#050806}
+  /* The 1280x640 card. Screenshot THIS element to export a PNG preview. */
+  .card{
+    position:relative; width:1280px; height:640px; overflow:hidden;
+    background:var(--ink-bg); color:var(--text);
+    font-family:var(--font-body); isolation:isolate;
+    display:flex; flex-direction:column; justify-content:center; gap:30px;
+    padding:48px 64px;
+  }
+  .glow{
+    position:absolute; inset:0; z-index:-2; pointer-events:none;
+    background:
+      radial-gradient(40% 55% at 12% 0%, rgba(53,224,137,.26) 0%, transparent 70%),
+      radial-gradient(42% 55% at 92% 20%, rgba(87,186,218,.18) 0%, transparent 72%),
+      radial-gradient(55% 60% at 70% 110%, rgba(53,224,137,.12) 0%, transparent 70%);
+  }
+  .grid{
+    position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:.5;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:64px 64px;
+    -webkit-mask-image:radial-gradient(75% 75% at 40% 30%, #000 20%, transparent 85%);
+    mask-image:radial-gradient(75% 75% at 40% 30%, #000 20%, transparent 85%);
+  }
+  .top{display:flex; align-items:center; gap:16px}
+  .top .mark{width:56px;height:56px;flex:0 0 auto}
+  .top .name{font-family:var(--font-display);font-weight:700;font-size:30px;letter-spacing:-.02em}
+  .top .name .frog{color:var(--green)}
+  .top .badge{
+    margin-left:auto; font-family:var(--font-mono); font-size:16px; color:var(--text2);
+    border:1px solid var(--border); background:rgba(255,255,255,.03);
+    padding:9px 18px; border-radius:999px;
+  }
+  .mid{max-width:1000px}
+  h1{
+    font-family:var(--font-display); font-weight:800; font-size:58px; line-height:1.04;
+    letter-spacing:-.035em; color:var(--text);
+  }
+  h1 .hl{color:var(--green)}
+  .tag{margin-top:18px; font-size:21px; line-height:1.4; color:var(--text2); max-width:880px}
+  .chips{display:flex; gap:12px; margin-top:22px}
+  .chip{
+    display:inline-flex; align-items:center; gap:10px; font-family:var(--font-mono);
+    font-size:17px; color:var(--text2); padding:11px 20px; border-radius:999px;
+    border:1px solid var(--border); background:rgba(255,255,255,.04);
+  }
+  .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+  .chip.c2 .dot{background:var(--cyan)}
+  .bottom{display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap}
+  .cmd{
+    display:inline-flex; align-items:center; gap:12px; background:var(--surf);
+    border:1px solid var(--border); border-radius:12px; padding:13px 18px;
+    font-family:var(--font-mono); font-size:15px; white-space:nowrap;
+  }
+  .cmd .p{color:var(--green);font-weight:700}
+  .cmd code{color:var(--text); white-space:nowrap}
+  .origin{font-family:var(--font-mono); font-size:15px; color:var(--muted); text-align:right; white-space:nowrap}
+  .origin b{color:var(--text2); font-weight:600}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="glow"></div>
+  <div class="grid"></div>
+
+  <div class="top">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M15 46 C 23 20, 41 20, 49 46" fill="none" stroke="#35e089" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="26.5" cy="24" r="4.4" fill="#35e089"/><circle cx="37.5" cy="24" r="4.4" fill="#35e089"/>
+      <circle cx="15" cy="46" r="5.6" fill="#35e089"/><circle cx="49" cy="46" r="5.6" fill="#57bada"/>
+    </svg>
+    <span class="name"><b>freebie</b><span class="frog">-frog</span></span>
+    <span class="badge">Apache-2.0 · open source</span>
+  </div>
+
+  <div class="mid">
+    <h1>Point your coding agent at <span class="hl">any model.</span></h1>
+    <p class="tag">A single-binary, security-first proxy that speaks the Anthropic Messages API and routes it to free-tier, local, or paid providers — using your own keys.</p>
+    <div class="chips">
+      <span class="chip"><span class="dot"></span>single binary</span>
+      <span class="chip"><span class="dot"></span>SSRF-guarded</span>
+      <span class="chip c2"><span class="dot"></span>streaming-correct</span>
+      <span class="chip"><span class="dot"></span>BYO-key</span>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="cmd"><span class="p">$</span><code>go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest</code></div>
+    <div class="origin"><b>github.com/dibakshya01/freebie-frog</b><br>Independent · not affiliated with any provider</div>
+  </div>
+</div>
+</body>
+</html>

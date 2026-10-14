@@ -151,12 +151,16 @@ func (t *GeminiStreamTranslator) handleFunctionCall(out sink, fc *gemini.Functio
 	if id == "" {
 		id = newToolUseID()
 	}
+	name := fc.Name
+	if name == "" {
+		name = "unknown"
+	}
 	if err := emit(out, "content_block_start", anthropic.ContentBlockStart{
 		Type: "content_block_start", Index: idx,
 		ContentBlock: anthropic.ContentBlock{
 			Type:  "tool_use",
 			ID:    id,
-			Name:  fc.Name,
+			Name:  name,
 			Input: json.RawMessage("{}"),
 		},
 	}); err != nil {

@@ -93,4 +93,16 @@ A running, one-line-per-step record of the freebie-frog build.
   router.Build; broadened patterns) so odd-shaped keys scrub by value; namespaced
   synthetic tool-call keys (no collision with negative indices); placeholder name/id
   for nameless tools; case-insensitive admin Host check. Tests added; green with -race.
-- Round 3 (final): verifying round-2 fixes + last sweep (claims/licensing/panics).
+- Round 3 (final, fresh subagent): verdict SHIP-READY — all round-2 fixes hold under
+  dynamic attack; no criticals; -race clean; ~1.2M fuzz execs with zero panics; no
+  goroutine leaks; no auth bypass; licensing/claims correct. Found 2 low-likelihood
+  🟡 nits, both fixed here:
+  - F1: provider error messages scrubbed BEFORE truncation (a key straddling the
+    500-char cut could leak a prefix) — fixed in all 3 provider message functions.
+  - F2: nameless/idless tool_use placeholder extended to the other 3 tool paths
+    (OpenAI non-stream, Gemini stream + non-stream) for schema validity.
+  Tests added for both. Full suite green with -race.
+- Phase 5 DONE: 3 adversarial rounds, severity trended critical->moderate->minor,
+  all fixes guarded by tests, no criticals survive. (govulncheck is the one unverified
+  item — the vuln DB is blocked by this sandbox's proxy; it runs in CI / a connected
+  environment. Deps are minimal: one direct, go-keyring.)

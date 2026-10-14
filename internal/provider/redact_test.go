@@ -3,6 +3,8 @@ package provider
 import (
 	"strings"
 	"testing"
+
+	"github.com/dibakshya01/freebie-frog/internal/security"
 )
 
 // An upstream that echoes a key in its error body must not surface it verbatim.
@@ -14,6 +16,17 @@ func TestProviderMessageScrubsKeys(t *testing.T) {
 	}
 	if !strings.Contains(msg, "***") {
 		t.Errorf("expected redaction marker, got %q", msg)
+	}
+}
+
+func TestProviderMessageScrubsBeforeTruncation(t *testing.T) {
+	// A registered key straddling the 500-char truncation point must not leak a prefix.
+	key := "SECRETKEYvalue1234567890abcdefXYZ0"
+	security.RegisterSecrets(key)
+	body := []byte(strings.Repeat("A", 490) + key)
+	msg := providerMessage(body, 401)
+	if strings.Contains(msg, "SECRETKEYv") {
+		t.Fatalf("partial key leaked past truncation: %q", msg)
 	}
 }
 

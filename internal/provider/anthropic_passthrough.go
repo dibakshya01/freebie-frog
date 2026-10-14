@@ -246,8 +246,10 @@ func anthropicMessage(body []byte, status int) string {
 	if s == "" {
 		return http.StatusText(status)
 	}
+	// Scrub before truncating so a key straddling the cut can't leak a partial prefix.
+	s = security.Scrub(s)
 	if len(s) > 500 {
 		s = s[:500]
 	}
-	return security.Scrub(s)
+	return s
 }

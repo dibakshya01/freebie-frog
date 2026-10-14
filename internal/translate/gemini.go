@@ -237,10 +237,14 @@ func ToAnthropicResponseFromGemini(g *gemini.GenerateContentResponse, requestedM
 			if id == "" {
 				id = newToolUseID()
 			}
+			name := p.FunctionCall.Name
+			if name == "" {
+				name = "unknown"
+			}
 			content = append(content, anthropic.ContentBlock{
 				Type:  "tool_use",
 				ID:    id,
-				Name:  p.FunctionCall.Name,
+				Name:  name,
 				Input: input,
 			})
 		case p.Thought:

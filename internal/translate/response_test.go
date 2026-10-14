@@ -80,6 +80,22 @@ func TestToAnthropicResponse_InvalidToolArgsBecomeEmptyObject(t *testing.T) {
 	}
 }
 
+func TestToAnthropicResponse_NamelessToolGetsPlaceholder(t *testing.T) {
+	o := &openai.Response{Choices: []openai.Choice{{
+		Message: &openai.RespMessage{Role: "assistant", ToolCalls: []openai.ToolCall{{
+			Function: openai.FunctionCall{Arguments: `{}`}, // no id, no name
+		}}},
+		FinishReason: sp("tool_calls"),
+	}}}
+	a, err := ToAnthropicResponse(o, "m")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(a.Content) != 1 || a.Content[0].Name == "" || a.Content[0].ID == "" {
+		t.Fatalf("nameless tool must get placeholder name+id, got %+v", a.Content)
+	}
+}
+
 func TestMapStopReason(t *testing.T) {
 	cases := []struct {
 		fr       string

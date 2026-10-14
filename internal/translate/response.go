@@ -29,10 +29,18 @@ func ToAnthropicResponse(o *openai.Response, requestedModel string) (*anthropic.
 		if len(input) == 0 || !json.Valid(input) {
 			input = json.RawMessage("{}")
 		}
+		id := tc.ID
+		if id == "" {
+			id = newToolUseID()
+		}
+		name := tc.Function.Name
+		if name == "" {
+			name = "unknown"
+		}
 		content = append(content, anthropic.ContentBlock{
 			Type:  "tool_use",
-			ID:    tc.ID,
-			Name:  tc.Function.Name,
+			ID:    id,
+			Name:  name,
 			Input: input,
 		})
 	}

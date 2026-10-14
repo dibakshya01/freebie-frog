@@ -1,0 +1,27 @@
+{
+  "name": "freebie-frog",
+  "owner": {
+    "name": "dibakshya01",
+    "url": "https://github.com/dibakshya01"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for the freebie-frog Anthropic-compatible multi-provider proxy.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "freebie-frog",
+      "source": "./plugins/freebie-frog",
+      "description": "Install, configure, run, and diagnose the freebie-frog proxy via /freebie-frog:* slash commands.",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "homepage": "https://dibakshya01.github.io/freebie-frog/",
+      "keywords": [
+        "freebie-frog",
+        "proxy",
+        "anthropic",
+        "providers"
+      ]
+    }
+  ]
+}

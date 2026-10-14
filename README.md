@@ -45,6 +45,18 @@ go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest
 make build   # -> ./bin/freebie
 ```
 
+### Install as a Claude Code plugin
+
+Prefer to drive freebie-frog from inside Claude Code? This repo ships a plugin
+with `/freebie-frog:*` slash commands (setup, start, doctor, providers, use):
+
+```text
+/plugin marketplace add dibakshya01/freebie-frog
+/plugin install freebie-frog
+```
+
+See [`plugins/freebie-frog/`](plugins/freebie-frog/) for the command reference.
+
 ## Quick start
 
 ```sh

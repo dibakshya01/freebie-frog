@@ -1,0 +1,19 @@
+{
+  "name": "freebie-frog",
+  "version": "0.1.0",
+  "description": "Slash commands to install, configure, run, and diagnose the freebie-frog Anthropic-compatible proxy from inside Claude Code.",
+  "author": {
+    "name": "freebie-frog contributors",
+    "url": "https://github.com/dibakshya01/freebie-frog"
+  },
+  "homepage": "https://dibakshya01.github.io/freebie-frog/",
+  "repository": "https://github.com/dibakshya01/freebie-frog",
+  "license": "Apache-2.0",
+  "keywords": [
+    "freebie-frog",
+    "proxy",
+    "anthropic",
+    "providers",
+    "cli"
+  ]
+}

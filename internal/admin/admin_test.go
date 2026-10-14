@@ -37,7 +37,7 @@ func TestBuildStateRedactsKeys(t *testing.T) {
 
 func TestAdminServesStateAndIndex(t *testing.T) {
 	cfg := sampleConfig()
-	ts := httptest.NewServer(security.AdminGuard(admin.Handler(&cfg)))
+	ts := httptest.NewServer(security.AdminGuard(admin.Handler(admin.Options{Config: &cfg})))
 	defer ts.Close()
 
 	// state endpoint (loopback Host from httptest) -> 200, no secret
@@ -68,7 +68,7 @@ func TestAdminServesStateAndIndex(t *testing.T) {
 
 func TestAdminRejectsNonLoopbackHost(t *testing.T) {
 	cfg := sampleConfig()
-	ts := httptest.NewServer(security.AdminGuard(admin.Handler(&cfg)))
+	ts := httptest.NewServer(security.AdminGuard(admin.Handler(admin.Options{Config: &cfg})))
 	defer ts.Close()
 
 	req, _ := http.NewRequest(http.MethodGet, ts.URL+"/admin/api/state", nil)

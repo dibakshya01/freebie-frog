@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -33,6 +34,11 @@ type ServerConfig struct {
 	AuthToken string `json:"auth_token,omitempty"`
 	// DisableAdmin turns off the local read-only admin dashboard (default on).
 	DisableAdmin bool `json:"disable_admin,omitempty"`
+	// AdminWrite enables the admin dashboard's management endpoints (editing
+	// providers and routing from the browser). Off by default: the dashboard is
+	// read-only unless this is explicitly set. Writes are still loopback-only and
+	// CSRF-guarded, and config changes require a restart to take effect.
+	AdminWrite bool `json:"admin_write,omitempty"`
 }
 
 // LogConfig controls structured logging.
@@ -107,6 +113,9 @@ func applyEnv(cfg *Config) error {
 	}
 	if v, ok := os.LookupEnv(envPrefix + "SERVER_AUTH_TOKEN"); ok {
 		cfg.Server.AuthToken = v
+	}
+	if v, ok := os.LookupEnv(envPrefix + "SERVER_ADMIN_WRITE"); ok {
+		cfg.Server.AdminWrite = v == "1" || strings.EqualFold(v, "true")
 	}
 	for _, e := range []struct {
 		key string

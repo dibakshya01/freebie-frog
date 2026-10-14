@@ -5,33 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>freebie-frog admin</title>
   <link rel="stylesheet" href="/admin/assets/styles.css" />
+  <script>
+    // Apply a persisted theme early to avoid a flash.
+    try { var t = localStorage.getItem("ff-admin-theme"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+  </script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="dot"></span> freebie-frog <span class="ver" id="version"></span></div>
-    <div class="muted">local admin · read-only</div>
+    <div class="brand"><span class="dot"></span> freebie-frog admin <span class="ver" id="version"></span></div>
+    <span class="spacer"></span>
+    <span class="mode-pill" id="mode-pill">read-only</span>
+    <span class="muted" id="refresh" title="auto-refresh"></span>
+    <button class="iconbtn" id="theme" type="button" aria-label="Toggle theme" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+    </button>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+    <button class="tab" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="tab" role="tab" data-tab="providers" aria-selected="false">Providers</button>
+    <button class="tab" role="tab" data-tab="routing" aria-selected="false">Routing</button>
+    <button class="tab" role="tab" data-tab="activity" aria-selected="false">Activity</button>
+    <button class="tab" role="tab" data-tab="manage" aria-selected="false" id="tab-manage" hidden>Manage</button>
+  </nav>
+
   <main>
-    <section class="card" id="server-card">
-      <h2>Server</h2>
-      <div id="server"></div>
+    <!-- OVERVIEW -->
+    <section class="panel" id="panel-overview" role="tabpanel">
+      <div class="tiles" id="tiles"></div>
+      <div class="card">
+        <h2>Requests by provider</h2>
+        <div id="provider-bars"><p class="empty">No requests recorded yet.</p></div>
+      </div>
+      <div class="card">
+        <h2>Recent activity</h2>
+        <div id="recent-mini"><p class="empty">No requests recorded yet.</p></div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Providers <span class="muted" id="provider-count"></span></h2>
-      <div id="providers" class="grid"></div>
+    <!-- PROVIDERS -->
+    <section class="panel" id="panel-providers" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Providers <span class="muted" id="provider-count"></span></h2>
+        <div id="providers" class="grid"></div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Model routing</h2>
-      <div id="routing"></div>
+    <!-- ROUTING -->
+    <section class="panel" id="panel-routing" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Model routing</h2>
+        <div id="routing"></div>
+        <p class="hint">A request's model is matched to an exact alias, then a tier (opus/sonnet/haiku/fable by substring), then the default chain. Targets are tried in order.</p>
+      </div>
     </section>
 
-    <p class="foot muted">
-      Keys are never shown here. Edit providers and routing in <code>config.json</code>
-      and restart. See the project README.
-    </p>
+    <!-- ACTIVITY -->
+    <section class="panel" id="panel-activity" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Recent requests</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Time</th><th>Model → target</th><th>Mode</th><th>Status</th>
+              <th class="num">In</th><th class="num">Out</th><th class="num">ms</th>
+            </tr></thead>
+            <tbody id="activity-rows"></tbody>
+          </table>
+        </div>
+        <p class="hint">Streamed output-token counts are omitted by most providers; input tokens for streams are estimated (see docs/CAPABILITIES.md).</p>
+      </div>
+    </section>
+
+    <!-- MANAGE (opt-in) -->
+    <section class="panel" id="panel-manage" role="tabpanel" hidden>
+      <div class="banner" id="manage-banner" hidden></div>
+      <div class="card">
+        <h2 id="prov-form-title">Add / edit provider</h2>
+        <div class="form-grid">
+          <label for="f-name">Name</label>
+          <input type="text" id="f-name" placeholder="groq" autocomplete="off" />
+          <label for="f-type">Type</label>
+          <select id="f-type"><option value="openai">openai</option><option value="gemini">gemini</option><option value="anthropic">anthropic</option></select>
+          <label for="f-baseurl">Base URL</label>
+          <input type="text" id="f-baseurl" placeholder="https://api.groq.com/openai/v1" autocomplete="off" />
+          <label for="f-keyref">API key ref</label>
+          <input type="text" id="f-keyref" placeholder="keychain:groq  or  env:GROQ_API_KEY" autocomplete="off" />
+          <label for="f-models">Models</label>
+          <input type="text" id="f-models" placeholder="llama-3.3-70b, … (comma-separated)" autocomplete="off" />
+          <label>Options</label>
+          <div class="checks">
+            <label><input type="checkbox" id="f-allowlocal" /> allow_local</label>
+            <label><input type="checkbox" id="f-maxcompletion" /> use_max_completion_tokens</label>
+            <label><input type="checkbox" id="f-streamusage" /> stream_usage</label>
+            <label><input type="checkbox" id="f-disableimages" /> disable_images</label>
+          </div>
+        </div>
+        <p class="hint">Secrets are never entered here. Store the key in your OS keychain or an env var and reference it above. Changes are saved to <code>config.json</code> and take effect after you restart <code>freebie serve</code>.</p>
+        <div class="btn-row">
+          <button class="btn primary" id="prov-save" type="button">Save provider</button>
+          <button class="btn" id="prov-reset" type="button">Clear form</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Configured providers</h2>
+        <div id="manage-provider-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Routing</h2>
+        <p class="hint">Edit the routing table as JSON (<code>default</code>, <code>tiers</code>, <code>aliases</code>; each value is a list of <code>provider/model</code> targets). Validated on save.</p>
+        <textarea id="routing-json" spellcheck="false" autocomplete="off"></textarea>
+        <div class="btn-row">
+          <button class="btn primary" id="routing-save" type="button">Save routing</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="foot muted">Local admin dashboard · loopback-only. Keys are never shown here.</p>
   </main>
 
   <script src="/admin/assets/app.js"></script>

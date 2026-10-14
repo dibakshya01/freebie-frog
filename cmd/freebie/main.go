@@ -17,8 +17,10 @@ import (
 	"sort"
 	"syscall"
 
+	"github.com/dibakshya01/freebie-frog/internal/admin"
 	"github.com/dibakshya01/freebie-frog/internal/config"
 	"github.com/dibakshya01/freebie-frog/internal/launch"
+	"github.com/dibakshya01/freebie-frog/internal/metrics"
 	"github.com/dibakshya01/freebie-frog/internal/obs"
 	"github.com/dibakshya01/freebie-frog/internal/router"
 	"github.com/dibakshya01/freebie-frog/internal/secret"
@@ -85,16 +87,24 @@ func cmdServe(args []string) error {
 		logger.Warn("binding a non-loopback address; ingress auth token is required and enabled", "addr", cfg.Server.Addr)
 	}
 
-	deps := server.Deps{Config: &cfg}
+	mx := metrics.New(0)
+	deps := server.Deps{Config: &cfg, Metrics: mx}
 	if len(cfg.Providers) > 0 {
 		reg, err := router.Build(&cfg, secret.New())
 		if err != nil {
 			return err
 		}
 		deps.Registry = reg
-		deps.Dispatcher = router.NewDispatcher(reg, logger)
+		disp := router.NewDispatcher(reg, logger)
+		disp.SetMetrics(mx)
+		deps.Dispatcher = disp
 	} else {
 		logger.Warn("no providers configured; the Messages API will return 503 until you add one (see README)")
+	}
+
+	if cfg.Server.AdminWrite && !cfg.Server.DisableAdmin {
+		deps.AdminManager = admin.NewManager(&cfg, resolveConfigPath(*cfgPath))
+		logger.Warn("admin management endpoints are ENABLED (server.admin_write); the dashboard can edit providers and routing (loopback-only, restart to apply)")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -230,5 +240,6 @@ Environment overrides (take precedence over the file):
   FREEBIE_SERVER_READ_TIMEOUT      (Go duration, e.g. 30s)
   FREEBIE_SERVER_WRITE_TIMEOUT     (Go duration; 0 = none, recommended for streaming)
   FREEBIE_SERVER_SHUTDOWN_TIMEOUT  (Go duration, e.g. 15s)
+  FREEBIE_SERVER_ADMIN_WRITE       (1|true to enable admin management endpoints)
 `)
 }

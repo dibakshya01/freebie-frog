@@ -138,11 +138,123 @@
     }, 2500);
   }
 
+  /* ---- Hero ambient canvas: "the pond" (gated) ---------------------------- */
+  // A calm network of drifting nodes — green on the ingress (left) side, cyan on
+  // the egress (right) side — with faint links and the occasional packet hopping
+  // between neighbours. Purely decorative; the hero is complete without it.
+  function wirePond() {
+    var cv = document.getElementById("pond");
+    if (!cv || reduceMotion) return;
+    var ctx;
+    try { ctx = cv.getContext("2d"); } catch (e) { return; }
+    if (!ctx) return;
+
+    var GREEN = "#35e089", CYAN = "#57bada";
+    var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var nodes = [], pulses = [], raf = null;
+    var LINK = 150;
+
+    function build() {
+      var count = Math.max(10, Math.min(28, Math.round(W / 64)));
+      nodes = [];
+      for (var i = 0; i < count; i++) {
+        nodes.push({
+          x: Math.random() * W, y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.17, vy: (Math.random() - 0.5) * 0.17,
+          r: 1.3 + Math.random() * 1.7
+        });
+      }
+      pulses = [];
+    }
+
+    function resize() {
+      var r = cv.getBoundingClientRect();
+      W = r.width; H = r.height;
+      if (W < 2 || H < 2) return;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+    }
+
+    function spawnPulse() {
+      if (nodes.length < 2) return;
+      var a = (Math.random() * nodes.length) | 0;
+      var best = -1, bestD = Infinity;
+      for (var j = 0; j < nodes.length; j++) {
+        if (j === a) continue;
+        var dx = nodes[j].x - nodes[a].x, dy = nodes[j].y - nodes[a].y;
+        var d = dx * dx + dy * dy;
+        if (d > 900 && d < bestD) { bestD = d; best = j; }
+      }
+      if (best < 0) return;
+      pulses.push({ a: a, b: best, t: 0, sp: 0.007 + Math.random() * 0.009, green: nodes[a].x < W * 0.5 });
+    }
+
+    function frame() {
+      raf = requestAnimationFrame(frame);
+      if (W < 2 || H < 2) return;
+      ctx.clearRect(0, 0, W, H);
+
+      var i, j, n;
+      for (i = 0; i < nodes.length; i++) {
+        n = nodes[i];
+        n.x += n.vx; n.y += n.vy;
+        if (n.x <= 0 || n.x >= W) n.vx *= -1;
+        if (n.y <= 0 || n.y >= H) n.vy *= -1;
+      }
+      // links
+      ctx.lineWidth = 1;
+      for (i = 0; i < nodes.length; i++) {
+        for (j = i + 1; j < nodes.length; j++) {
+          var ddx = nodes[i].x - nodes[j].x, ddy = nodes[i].y - nodes[j].y;
+          var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+          if (dist < LINK) {
+            ctx.strokeStyle = "rgba(170,192,180," + ((1 - dist / LINK) * 0.11).toFixed(3) + ")";
+            ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+          }
+        }
+      }
+      // nodes
+      for (i = 0; i < nodes.length; i++) {
+        n = nodes[i];
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = n.x < W * 0.5 ? GREEN : CYAN;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // pulses
+      for (var k = pulses.length - 1; k >= 0; k--) {
+        var p = pulses[k]; p.t += p.sp;
+        if (p.t >= 1 || !nodes[p.a] || !nodes[p.b]) { pulses.splice(k, 1); continue; }
+        var x = nodes[p.a].x + (nodes[p.b].x - nodes[p.a].x) * p.t;
+        var y = nodes[p.a].y + (nodes[p.b].y - nodes[p.a].y) * p.t;
+        ctx.fillStyle = p.green ? GREEN : CYAN;
+        ctx.globalAlpha = 0.85 * Math.sin(p.t * Math.PI);
+        ctx.beginPath(); ctx.arc(x, y, 2.4, 0, 6.2832); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (pulses.length < 5 && Math.random() < 0.03) spawnPulse();
+    }
+
+    window.addEventListener("resize", resize, { passive: true });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+      else if (!raf) { raf = requestAnimationFrame(frame); }
+    });
+
+    resize();
+    if (W >= 2) {
+      for (var s = 0; s < 4; s++) spawnPulse();
+      raf = requestAnimationFrame(frame);
+    }
+  }
+
   function init() {
     wireThemeToggle();
     wireCopy();
     wireNav();
     wireReveal();
+    wirePond();
   }
 
   if (document.readyState === "loading") {

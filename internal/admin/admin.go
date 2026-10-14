@@ -1,7 +1,11 @@
-// Package admin serves a read-only local dashboard showing the proxy's configured
-// providers (with keys masked), model routing, and server info. It is mounted only
-// on loopback and protected by security.AdminGuard. Configuration edits are done in
-// config.json (see README); editing from the UI is a documented future enhancement.
+// Package admin serves the local admin dashboard: a read-only view of the proxy's
+// configured providers (keys masked), model routing, server info, and live request
+// metrics. It is mounted only on loopback and protected by security.AdminGuard.
+//
+// Optional management endpoints (editing providers and routing from the browser) are
+// enabled only when a *Manager is supplied — i.e. when server.admin_write is set.
+// Those writes are still loopback-only and CSRF-guarded, never carry secret values,
+// and require a restart to take effect.
 package admin
 
 import (
@@ -12,6 +16,7 @@ import (
 	"sort"
 
 	"github.com/dibakshya01/freebie-frog/internal/config"
+	"github.com/dibakshya01/freebie-frog/internal/metrics"
 	"github.com/dibakshya01/freebie-frog/internal/version"
 )
 
@@ -20,10 +25,11 @@ var assets embed.FS
 
 // State is the redacted snapshot the dashboard renders. It never contains secrets.
 type State struct {
-	Version   string         `json:"version"`
-	Server    ServerInfo     `json:"server"`
-	Providers []ProviderInfo `json:"providers"`
-	Routing   RoutingInfo    `json:"routing"`
+	Version      string         `json:"version"`
+	WriteEnabled bool           `json:"write_enabled"`
+	Server       ServerInfo     `json:"server"`
+	Providers    []ProviderInfo `json:"providers"`
+	Routing      RoutingInfo    `json:"routing"`
 }
 
 // ServerInfo describes the listener.
@@ -34,12 +40,14 @@ type ServerInfo struct {
 
 // ProviderInfo is a provider with its key presence (never its value).
 type ProviderInfo struct {
-	Name          string   `json:"name"`
-	Type          string   `json:"type"`
-	BaseURL       string   `json:"base_url"`
-	Models        []string `json:"models"`
-	KeyConfigured bool     `json:"key_configured"`
-	AllowLocal    bool     `json:"allow_local"`
+	Name          string                `json:"name"`
+	Type          string                `json:"type"`
+	BaseURL       string                `json:"base_url"`
+	Models        []string              `json:"models"`
+	KeyConfigured bool                  `json:"key_configured"`
+	KeyRef        string                `json:"key_ref,omitempty"` // the reference (e.g. env:NAME), not the secret
+	AllowLocal    bool                  `json:"allow_local"`
+	Quirks        config.ProviderQuirks `json:"quirks,omitempty"`
 }
 
 // RoutingInfo is the model routing table.
@@ -49,7 +57,8 @@ type RoutingInfo struct {
 	Aliases map[string][]string `json:"aliases"`
 }
 
-// BuildState builds a redacted State from config. Secrets are reduced to a boolean.
+// BuildState builds a redacted State from config. Secrets are reduced to a boolean
+// plus their (non-secret) reference string.
 func BuildState(cfg *config.Config) State {
 	s := State{
 		Version: version.Version,
@@ -69,25 +78,43 @@ func BuildState(cfg *config.Config) State {
 			BaseURL:       p.BaseURL,
 			Models:        p.Models,
 			KeyConfigured: p.APIKey != "" || p.APIKeyRef != "",
+			KeyRef:        p.APIKeyRef,
 			AllowLocal:    p.AllowLocal,
+			Quirks:        p.Quirks,
 		})
 	}
 	return s
 }
 
-// Handler returns the admin routes (to be mounted under AdminGuard). cfg is captured
-// for the read-only snapshot.
-func Handler(cfg *config.Config) http.Handler {
+// Options configures the admin handler.
+type Options struct {
+	Config  *config.Config     // read-only snapshot source (required)
+	Metrics *metrics.Collector // request metrics (nil-safe)
+	Manager *Manager           // non-nil enables the write endpoints
+}
+
+// Handler returns the admin routes (to be mounted under AdminGuard).
+func Handler(opts Options) http.Handler {
 	sub, err := fs.Sub(assets, "assets")
 	if err != nil {
 		panic("admin: embedded assets: " + err.Error())
 	}
 	mux := http.NewServeMux()
 	mux.Handle("GET /admin/assets/", http.StripPrefix("/admin/assets/", http.FileServer(http.FS(sub))))
+
 	mux.HandleFunc("GET /admin/api/state", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(BuildState(cfg))
+		writeJSON(w, http.StatusOK, currentState(opts))
 	})
+	mux.HandleFunc("GET /admin/api/stats", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, opts.Metrics.Snapshot())
+	})
+
+	if opts.Manager != nil {
+		mux.HandleFunc("PUT /admin/api/providers/{name}", opts.Manager.handlePutProvider)
+		mux.HandleFunc("DELETE /admin/api/providers/{name}", opts.Manager.handleDeleteProvider)
+		mux.HandleFunc("PUT /admin/api/routing", opts.Manager.handlePutRouting)
+	}
+
 	mux.HandleFunc("GET /admin/{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFileFS(w, r, sub, "index.html")
 	})
@@ -95,4 +122,17 @@ func Handler(cfg *config.Config) http.Handler {
 		http.Redirect(w, r, "/admin/", http.StatusMovedPermanently)
 	})
 	return mux
+}
+
+func currentState(opts Options) State {
+	if opts.Manager != nil {
+		return opts.Manager.State()
+	}
+	return BuildState(opts.Config)
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
 }

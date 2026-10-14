@@ -115,6 +115,36 @@ validated. Pass `--config path.json` or drop a `config.json` in the working dire
 - **`allow_local`** — required for a provider whose host is loopback/private (e.g. a
   local model); the SSRF guard still validates the resolved IP at dial time.
 
+## Admin dashboard
+
+`freebie serve` hosts a local dashboard at **http://127.0.0.1:4000/admin/**. It is
+**loopback-only** (with a DNS-rebinding–safe `Host` check) and shows:
+
+- **Overview** — request totals, success rate, average latency, token usage, and a
+  live "requests by provider" chart.
+- **Providers** — each provider's health (derived from recent outcomes), request
+  counts, latency, and last error. Keys are never shown — only whether one is set.
+- **Routing** — the resolved alias/tier/default routing table.
+- **Activity** — a rolling log of recent requests (model → target, status, tokens, ms).
+
+Metrics are in-memory and reset when the proxy restarts; no request bodies are kept.
+Disable the dashboard entirely with `"server": { "disable_admin": true }`.
+
+### Editing from the browser (opt-in)
+
+Set `"admin_write": true` under `server` to add a **Manage** tab that edits providers
+and routing and saves them to `config.json`:
+
+```jsonc
+{ "server": { "addr": "127.0.0.1:4000", "admin_write": true } }
+```
+
+Management writes are loopback-only and CSRF-guarded, **never accept a raw key**
+(reference it by `api_key_ref`, e.g. `keychain:groq` / `env:GROQ_API_KEY`), and take
+effect after you restart `freebie serve`. It is off by default (read-only dashboard).
+The dashboard assumes loopback trust: if you set `server.auth_token`, the browser UI
+becomes token-gated along with the API.
+
 ## CLI
 
 ```

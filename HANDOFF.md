@@ -17,6 +17,26 @@ adversarial review rounds. It is pre-1.0 — evaluate before depending on it.
 
 Everything below needs **you** (accounts, keys, publishing, posting).
 
+### Done in this session (no action needed)
+
+- Code built, hardened (3 adversarial rounds), merged to `main` via PR #1.
+- Verified end-to-end with the real binary against a live local provider.
+- Social preview card rendered → `docs/assets/social-card.png` (ready to upload).
+- Pages deploy workflow added (`.github/workflows/pages.yml`).
+- CoC/SECURITY reporting finalized (GitHub private vulnerability reporting).
+- Branch renamed to `feat/initial-implementation` (now merged).
+
+### Blocked in this environment (org policy / sandbox) — trivial for you
+
+- **Tag the release:** the git proxy denies tag pushes here (403). From your own
+  clone: `git tag v0.1.0 && git push origin v0.1.0` (or GitHub UI → Releases →
+  Draft new release → tag `v0.1.0` on `main` → Publish). This triggers GoReleaser
+  and makes `go install github.com/dibakshya01/freebie-frog/cmd/freebie@v0.1.0` work.
+- **`govulncheck`:** the vuln DB is blocked by this sandbox; it runs in CI (already
+  wired) and on your machine (`govulncheck ./...`).
+- **Delete the stale `m0-scaffold` remote branch** (ref deletion denied here): one
+  click in the GitHub branches UI.
+
 ## 1. Run against a real provider (needed to use the tool for real)
 
 The proxy is verified end-to-end against an in-process **mock** provider (no

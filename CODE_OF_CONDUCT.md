@@ -63,9 +63,6 @@ reviewed and investigated promptly and fairly.
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
 
-> Maintainers: set a dedicated conduct contact (email or form) and replace this
-> paragraph. See HANDOFF.md.
-
 ## Enforcement Guidelines
 
 Community leaders will follow these Community Impact Guidelines in determining

@@ -18,8 +18,6 @@ describe where the issue is instead.
 We aim to acknowledge reports within a few days and to coordinate a fix and
 disclosure timeline with you.
 
-> Maintainers: consider adding a dedicated security contact email. See HANDOFF.md.
-
 ## Supported versions
 
 Until a `1.0.0` release, only the latest `main` / most recent tagged release

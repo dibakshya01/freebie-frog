@@ -22,8 +22,8 @@
     position:relative; width:1280px; height:640px; overflow:hidden;
     background:var(--ink-bg); color:var(--text);
     font-family:var(--font-body); isolation:isolate;
-    display:flex; flex-direction:column; justify-content:space-between;
-    padding:72px 80px;
+    display:flex; flex-direction:column; justify-content:center; gap:30px;
+    padding:48px 64px;
   }
   .glow{
     position:absolute; inset:0; z-index:-2; pointer-events:none;
@@ -50,14 +50,14 @@
     border:1px solid var(--border); background:rgba(255,255,255,.03);
     padding:9px 18px; border-radius:999px;
   }
-  .mid{max-width:960px}
+  .mid{max-width:1000px}
   h1{
-    font-family:var(--font-display); font-weight:800; font-size:76px; line-height:1.02;
+    font-family:var(--font-display); font-weight:800; font-size:58px; line-height:1.04;
     letter-spacing:-.035em; color:var(--text);
   }
   h1 .hl{color:var(--green)}
-  .tag{margin-top:26px; font-size:26px; line-height:1.4; color:var(--text2); max-width:900px}
-  .chips{display:flex; gap:14px; margin-top:34px}
+  .tag{margin-top:18px; font-size:21px; line-height:1.4; color:var(--text2); max-width:880px}
+  .chips{display:flex; gap:12px; margin-top:22px}
   .chip{
     display:inline-flex; align-items:center; gap:10px; font-family:var(--font-mono);
     font-size:17px; color:var(--text2); padding:11px 20px; border-radius:999px;
@@ -65,15 +65,15 @@
   }
   .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
   .chip.c2 .dot{background:var(--cyan)}
-  .bottom{display:flex; align-items:center; justify-content:space-between; gap:24px}
+  .bottom{display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap}
   .cmd{
-    display:inline-flex; align-items:center; gap:14px; background:var(--surf);
-    border:1px solid var(--border); border-radius:14px; padding:16px 22px;
-    font-family:var(--font-mono); font-size:19px;
+    display:inline-flex; align-items:center; gap:12px; background:var(--surf);
+    border:1px solid var(--border); border-radius:12px; padding:13px 18px;
+    font-family:var(--font-mono); font-size:15px; white-space:nowrap;
   }
   .cmd .p{color:var(--green);font-weight:700}
-  .cmd code{color:var(--text)}
-  .origin{font-family:var(--font-mono); font-size:16px; color:var(--muted); text-align:right}
+  .cmd code{color:var(--text); white-space:nowrap}
+  .origin{font-family:var(--font-mono); font-size:15px; color:var(--muted); text-align:right; white-space:nowrap}
   .origin b{color:var(--text2); font-weight:600}
 </style>
 </head>
@@ -105,7 +105,7 @@
 
   <div class="bottom">
     <div class="cmd"><span class="p">$</span><code>go install github.com/dibakshya01/freebie-frog/cmd/freebie@latest</code></div>
-    <div class="origin"><b>github.com/dibakshya01/freebie-frog</b><br>Independent · not affiliated with Anthropic, OpenAI, or Google</div>
+    <div class="origin"><b>github.com/dibakshya01/freebie-frog</b><br>Independent · not affiliated with any provider</div>
   </div>
 </div>
 </body>

@@ -18,9 +18,9 @@ the Anthropic Messages API format, translates them to the target provider
 > OpenAI, Google, or any model provider. "Claude Code", "Anthropic", "OpenAI",
 > "Gemini", and other names are trademarks of their respective owners.
 
-**Website:** a full guide (home, plain-English ELI5, docs, architecture) is in
-[`docs/`](docs/) and publishes to GitHub Pages once enabled (see `HANDOFF.md`):
-`https://dibakshya01.github.io/freebie-frog/`.
+**Website:** the full guide — home, plain-English ELI5, docs, and the
+architecture diagrams — is live at
+**<https://dibakshya01.github.io/freebie-frog/>** (source in [`docs/`](docs/)).
 
 ## Why
 

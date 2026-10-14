@@ -16,7 +16,10 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          # Pinned to the exact patch govulncheck needs: several 2026 Go stdlib
+          # advisories are fixed only in go1.26.9. A bare "1.26" lets the runner
+          # reuse an older pre-cached 1.26 patch, so pin the full version.
+          go-version: "1.26.9"
           cache: true
 
       - name: Check formatting

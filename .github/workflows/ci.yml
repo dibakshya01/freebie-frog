@@ -16,7 +16,9 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          # 1.26 picks up the Go stdlib security fixes govulncheck requires
+          # (several 2026 advisories are fixed only in go1.26.x).
+          go-version: "1.26"
           cache: true
 
       - name: Check formatting

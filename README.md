@@ -1,12 +1,8 @@
 <div align="center">
 
 <a href="https://dibakshya01.github.io/freebie-frog/">
-  <img src="docs/assets/social-card.png" alt="freebie-frog — point your coding agent at any model" width="820">
+  <img src="docs/assets/banner.png" alt="freebie-frog — point your coding agent at any model" width="900">
 </a>
-
-<h1>freebie-frog</h1>
-
-<p><strong>Point your coding agent at any model.</strong></p>
 
 <p>
 A single-binary, security-first proxy that speaks the <strong>Anthropic Messages API</strong><br>

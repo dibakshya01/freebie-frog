@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://dibakshya01.github.io/freebie-frog/">
-  <img src="docs/assets/social-card.png" alt="freebie-frog — point your coding agent at any model" width="820">
+  <img src="docs/assets/hero-banner.png" alt="freebie-frog — point your coding agent at any model: free-tier, local, or paid providers with your own keys" width="880">
 </a>
 
 <h1>freebie-frog</h1>
